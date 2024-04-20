@@ -60,8 +60,11 @@ enum TokenType
 struct Token
 {
     TokenType type;
-    std::variant<int, float, std::string, bool> value;
     Position position;
+    std::variant<int, float, std::string, bool> value;
+
+    Token(TokenType type, const Position& pos, const std::variant<int, float, std::string, bool>& val) : type(type), position(pos), value(val) {}
+    Token(TokenType type, const Position& pos) : type(type), position(pos) {}
 };
 
 #endif

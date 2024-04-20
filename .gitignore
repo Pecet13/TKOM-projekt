@@ -9,4 +9,7 @@
 /*.o
 /*.a
 /*.out
+/_deps/
+/.vscode
+/lib
 Makefile
