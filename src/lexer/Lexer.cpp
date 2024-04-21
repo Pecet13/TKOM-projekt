@@ -12,10 +12,17 @@ void Lexer::nextChar()
     position.advance(currentChar);
 }
 
-void Lexer::skipWhitespace()
+void Lexer::skipWhitespaceAndComment()
 {
-    while (std::isspace(currentChar) && source)
+    while (std::isspace(currentChar) || currentChar == '#')
     {
+        if (currentChar == '#')
+        {
+            while (currentChar != '\n' && source)
+            {
+                nextChar();
+            }
+        }
         nextChar();
     }
 }
@@ -30,10 +37,22 @@ bool Lexer::checkEOF()
     return false;
 }
 
-bool Lexer::checkBracket()
+bool Lexer::checkSingleCharToken()
 {
     switch (currentChar)
     {
+        case '+':
+            currentToken = Token(T_PLUS, position);
+            return true;
+        case '-':
+            currentToken = Token(T_MINUS, position);
+            return true;
+        case '*':
+            currentToken = Token(T_ASTERISK, position);
+            return true;
+        case '/':
+            currentToken = Token(T_SLASH, position);
+            return true;
         case '(':
             currentToken = Token(T_BRACKET_OPEN, position);
             return true;
@@ -46,16 +65,53 @@ bool Lexer::checkBracket()
         case ']':
             currentToken = Token(T_SQUARE_CLOSE, position);
             return true;
+        case ',':
+            currentToken = Token(T_COMMA, position);
+            return true;
+        case ';':
+            currentToken = Token(T_SEMICOLON, position);
+            return true;
+        case '.':
+            currentToken = Token(T_DOT, position);
+            return true;
+    }
+    return false;
+}
+
+bool Lexer::checkKeywordOrId()
+{
+    if (isalpha(currentChar))
+    {
+        std::string word;
+        while(isalnum(currentChar) || currentChar == '_')
+        {
+            word += currentChar;
+            nextChar();
+        }
+        auto it = keywords.find(word);
+        if (it != keywords.end())
+        {
+            currentToken = Token(it->second, position);
+        }
+        else
+        {
+            currentToken = Token(T_ID, position, word);
+        }
+        return true;
     }
     return false;
 }
 
 Token Lexer::nextToken()
 {
-    skipWhitespace();
-    if (checkEOF() || checkBracket())
+    skipWhitespaceAndComment();
+    Position startPosition = position;
+    if (checkEOF()
+    || checkSingleCharToken()
+    || checkKeywordOrId())
     {
         nextChar();
+        currentToken.position = startPosition;
         return currentToken;
     }
     currentToken = Token(T_UNKNOWN, position);
