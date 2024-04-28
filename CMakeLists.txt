@@ -12,6 +12,7 @@ add_library(Lexer
     include/lexer/Lexer.h
     include/lexer/Position.h
     include/lexer/Token.h
+    include/lexer/LexerException.h
     src/lexer/Lexer.cpp
     src/lexer/Position.cpp
 )

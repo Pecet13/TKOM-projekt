@@ -11,8 +11,8 @@ public:
     Position();
     Position(unsigned int lin, unsigned int col);
 
-    unsigned int getLine();
-    unsigned int getColumn();
+    unsigned int getLine() const;
+    unsigned int getColumn() const;
 
     void advance(char currentChar);
 };

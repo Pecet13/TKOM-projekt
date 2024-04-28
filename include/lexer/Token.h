@@ -21,6 +21,8 @@ enum TokenType
     T_STRUCT,
     T_VARIANT,
 
+    T_TRUE,
+    T_FALSE,
     T_NOT,
     T_AND,
     T_OR,
@@ -28,7 +30,6 @@ enum TokenType
     T_INT_VALUE,
     T_FLOAT_VALUE,
     T_STRING_VALUE,
-    T_BOOL_VALUE,
 
     T_COMMA,
     T_SEMICOLON,

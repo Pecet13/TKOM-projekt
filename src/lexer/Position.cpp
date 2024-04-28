@@ -6,12 +6,12 @@ Position::Position()
 Position::Position(unsigned int lin, unsigned int col):
 line(lin), column(col) {}
 
-unsigned int Position::getLine()
+unsigned int Position::getLine() const
 {
     return line;
 }
 
-unsigned int Position::getColumn()
+unsigned int Position::getColumn() const 
 {
     return column;
 }

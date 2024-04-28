@@ -3,8 +3,10 @@
 
 #include "Position.h"
 #include "Token.h"
+#include "LexerException.h"
 #include <sstream>
 #include <unordered_map>
+#include <cmath>
 
 
 class Lexer
@@ -12,8 +14,11 @@ class Lexer
 private:
     std::istream &source;
     Position position;
+    Position tokenStartPosition;
     char currentChar;
     Token currentToken;
+    size_t maxIDLength = 50;
+    size_t maxNumberLength = 20;
     std::unordered_map<std::string, TokenType> keywords = 
     {
         {"if", T_IF},
@@ -28,6 +33,8 @@ private:
         {"bool", T_BOOL},
         {"struct", T_STRUCT},
         {"variant", T_VARIANT},
+        {"true", T_TRUE},
+        {"false", T_FALSE},
         {"and", T_AND},
         {"or", T_OR},
         {"mut", T_MUT}
@@ -41,10 +48,9 @@ private:
     bool checkKeywordOrId();
     bool checkNumber();
     bool checkString();
-    bool checkBool();
     bool checkComp();
 public:
-    Lexer(std::istream &s);
+    Lexer(std::istream &s, size_t maxIDLen=50, size_t maxNumLen=20);
     Token nextToken();
 };
 
