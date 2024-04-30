@@ -44,33 +44,43 @@ bool Lexer::checkSingleCharToken()
     {
         case '+':
             currentToken = Token(T_PLUS, tokenStartPosition);
+            nextChar();
             return true;
         case '-':
             currentToken = Token(T_MINUS, tokenStartPosition);
+            nextChar();
             return true;
         case '*':
             currentToken = Token(T_ASTERISK, tokenStartPosition);
+            nextChar();
             return true;
         case '/':
             currentToken = Token(T_SLASH, tokenStartPosition);
+            nextChar();
             return true;
         case '(':
             currentToken = Token(T_BRACKET_OPEN, tokenStartPosition);
+            nextChar();
             return true;
         case ')':
             currentToken = Token(T_BRACKET_CLOSE, tokenStartPosition);
+            nextChar();
             return true;
         case '[':
             currentToken = Token(T_SQUARE_OPEN, tokenStartPosition);
+            nextChar();
             return true;
         case ']':
             currentToken = Token(T_SQUARE_CLOSE, tokenStartPosition);
+            nextChar();
             return true;
         case ',':
             currentToken = Token(T_COMMA, tokenStartPosition);
+            nextChar();
             return true;
         case ';':
             currentToken = Token(T_SEMICOLON, tokenStartPosition);
+            nextChar();
             return true;
     }
     return false;
@@ -201,6 +211,7 @@ bool Lexer::checkString()
         if (currentChar == '"')
         {
             currentToken = Token(T_STRING_VALUE, tokenStartPosition, text);
+            nextChar();
             return true;
         }
         else
@@ -220,6 +231,7 @@ bool Lexer::checkComp()
         if (currentChar == '=')
         {
             currentToken = Token(T_EQUAL, tokenStartPosition);
+            nextChar();
             return true;
         }
         currentToken = Token(T_ASSIGN, tokenStartPosition);
@@ -229,6 +241,7 @@ bool Lexer::checkComp()
         if (currentChar == '=')
         {
             currentToken = Token(T_NOT_EQUAL, tokenStartPosition);
+            nextChar();
             return true;
         }
         currentToken = Token(T_NOT, tokenStartPosition);
@@ -238,6 +251,7 @@ bool Lexer::checkComp()
         if (currentChar == '=')
         {
             currentToken = Token(T_GREATER_EQUAL, tokenStartPosition);
+            nextChar();
             return true;
         }
         currentToken = Token(T_GREATER, tokenStartPosition);
@@ -247,6 +261,7 @@ bool Lexer::checkComp()
         if (currentChar == '=')
         {
             currentToken = Token(T_LESS_EQUAL, tokenStartPosition);
+            nextChar();
             return true;
         }
         currentToken = Token(T_LESS, tokenStartPosition);
@@ -266,7 +281,6 @@ Token Lexer::nextToken()
     || checkString()
     || checkComp())
     {
-        nextChar();
         return currentToken;
     }
     currentToken = Token(T_UNKNOWN, position);
