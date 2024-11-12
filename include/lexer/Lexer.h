@@ -19,26 +19,7 @@ private:
     Token currentToken;
     size_t maxIDLength = 50;
     size_t maxNumberLength = 20;
-    std::unordered_map<std::string, TokenType> keywords = 
-    {
-        {"if", T_IF},
-        {"else", T_ELSE},
-        {"while", T_WHILE},
-        {"return", T_RETURN},
-        {"match", T_MATCH},
-        {"void", T_VOID},
-        {"int", T_INT},
-        {"float", T_FLOAT},
-        {"string", T_STRING},
-        {"bool", T_BOOL},
-        {"struct", T_STRUCT},
-        {"variant", T_VARIANT},
-        {"true", T_TRUE},
-        {"false", T_FALSE},
-        {"and", T_AND},
-        {"or", T_OR},
-        {"mut", T_MUT}
-    };
+    static const std::unordered_map<std::string, TokenType> keywords;
 
     void nextChar();
     void skipWhitespaceAndComment();

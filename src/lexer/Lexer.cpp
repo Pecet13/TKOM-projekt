@@ -1,6 +1,27 @@
 #include "lexer/Lexer.h"
 #include "lexer/LexerException.h"
 
+const std::unordered_map<std::string, TokenType> Lexer::keywords = 
+{
+    {"if", T_IF},
+    {"else", T_ELSE},
+    {"while", T_WHILE},
+    {"return", T_RETURN},
+    {"match", T_MATCH},
+    {"void", T_VOID},
+    {"int", T_INT},
+    {"float", T_FLOAT},
+    {"string", T_STRING},
+    {"bool", T_BOOL},
+    {"struct", T_STRUCT},
+    {"variant", T_VARIANT},
+    {"true", T_TRUE},
+    {"false", T_FALSE},
+    {"and", T_AND},
+    {"or", T_OR},
+    {"mut", T_MUT}
+};
+
 Lexer::Lexer(std::istream &s, size_t maxIDLen, size_t maxNumLen):
 source(s), position(1, 0), currentToken(T_UNKNOWN, position), maxIDLength(maxIDLen), maxNumberLength(maxNumLen)
 {
