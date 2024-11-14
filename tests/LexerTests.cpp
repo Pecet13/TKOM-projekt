@@ -236,7 +236,7 @@ TEST(LexerTests, Dot)
     EXPECT_EQ(token.position.getColumn(), 1);
 }
 
-TEST(LexerTests, NumberTooBig)
+TEST(LexerTests, IntOverflow)
 {
     std::string input = "12345678910111213141516";
     std::stringstream source{input};
@@ -245,7 +245,25 @@ TEST(LexerTests, NumberTooBig)
     EXPECT_THROW(lexer.nextToken(), LexerException);
 }
 
-TEST(LexerTests, NumberStartingWithZeros)
+TEST(LexerTests, FloatOverflow)
+{
+    std::string input = "12345678910111213141.516";
+    std::stringstream source{input};
+    Lexer lexer(source);
+
+    EXPECT_THROW(lexer.nextToken(), LexerException);
+}
+
+TEST(LexerTests, FloatOverflow2)
+{
+    std::string input = "123.456789101112131415161718192021222324252627282930";
+    std::stringstream source{input};
+    Lexer lexer(source);
+
+    EXPECT_THROW(lexer.nextToken(), LexerException);
+}
+
+TEST(LexerTests, IntStartingWithZeros)
 {
     std::string input = "0001";
     std::stringstream source{input};
@@ -254,7 +272,7 @@ TEST(LexerTests, NumberStartingWithZeros)
     EXPECT_THROW(lexer.nextToken(), LexerException);
 }
 
-TEST(LexerTests, NumberStartingWithZeros2)
+TEST(LexerTests, FloatStartingWithZeros)
 {
     std::string input = "00.01";
     std::stringstream source{input};

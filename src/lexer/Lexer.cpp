@@ -22,8 +22,8 @@ const std::unordered_map<std::string, TokenType> Lexer::keywords =
     {"mut", T_MUT}
 };
 
-Lexer::Lexer(std::istream &s, size_t maxIDLen, size_t maxNumLen):
-source(s), position(1, 0), currentToken(T_UNKNOWN, position), maxIDLength(maxIDLen), maxNumberLength(maxNumLen)
+Lexer::Lexer(std::istream &s, size_t maxIDLen):
+source(s), position(1, 0), currentToken(T_UNKNOWN, position), maxIDLength(maxIDLen)
 {
     nextChar();
 }
@@ -157,13 +157,13 @@ bool Lexer::checkNumber()
         nextChar();
         while (isdigit(currentChar))
         {
+            if (number > (INT_MAX - currentChar - '0') / 10)
+            {
+                throw LexerException("integer overflow", tokenStartPosition);
+            }
             number = number * 10 + currentChar - '0';
             digitCount++;
             nextChar();
-            if (digitCount > maxNumberLength)
-            {
-                throw LexerException("number too long", tokenStartPosition);
-            }
         }
         if (currentChar == '.')
         {
@@ -177,13 +177,13 @@ bool Lexer::checkNumber()
                 digitCount++;
                 while (isdigit(currentChar))
                 {
+                    if (fraction > (FLT_MAX - currentChar - '0') / 10)
+                    {
+                        throw LexerException("float overflow", tokenStartPosition);
+                    }
                     fraction = fraction * 10 + currentChar - '0';
                     exponent++;
                     nextChar();
-                    if (digitCount > maxNumberLength)
-                    {
-                        throw LexerException("number too long", tokenStartPosition);
-                    }
                 }
             }
             fraction = fraction / pow(10, exponent);
