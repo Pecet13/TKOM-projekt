@@ -294,6 +294,19 @@ TEST(LexerTests, String)
     EXPECT_EQ(std::get<std::string>(token.value), "Ala ma kota");
 }
 
+TEST(LexerTests, StringWEscaping)
+{
+    std::string input = "\"\\\"Ala\\\" ma kota\\n\\ta Bartek nie\\\\\"";
+    std::stringstream source{input};
+    Lexer lexer(source);
+
+    Token token = lexer.nextToken();
+    EXPECT_EQ(token.type, TokenType::T_STRING_VALUE);
+    EXPECT_EQ(token.position.getLine(), 1);
+    EXPECT_EQ(token.position.getColumn(), 1);
+    EXPECT_EQ(std::get<std::string>(token.value), "\"Ala\" ma kota\n\ta Bartek nie\\");
+}
+
 TEST(LexerTests, ArithmeticSigns)
 {
     std::string input = "+ - * /";

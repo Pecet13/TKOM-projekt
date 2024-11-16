@@ -226,7 +226,31 @@ bool Lexer::checkString()
         nextChar();
         while (currentChar != '"' && currentChar != EOF)
         {
-            text += currentChar;
+            if (currentChar == '\\')
+            {
+                nextChar();
+                switch (currentChar)
+                {
+                case '"':
+                    text += '"';
+                    break;
+                case '\\':
+                    text += '\\';
+                    break;
+                case 'n':
+                    text += '\n';
+                    break;
+                case 't':
+                    text += '\t';
+                    break;
+                default:
+                    throw LexerException("invalid escape sequence", tokenStartPosition);
+                }
+            }
+            else
+            {
+                text += currentChar;
+            }
             nextChar();
         }
         if (currentChar == '"')
