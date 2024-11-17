@@ -185,6 +185,14 @@ TEST(LexerTests, IntValue)
     EXPECT_EQ(std::get<int>(token.value), 234);
 }
 
+TEST(LexerTests, InvalidIntValue)
+{
+    Position pos(1, 1);
+    EXPECT_THROW({
+        Token token(T_INT_VALUE, pos, std::string("value"));
+    }, LexerException);
+}
+
 TEST(LexerTests, FloatValue)
 {
     std::string input = "234.567";
@@ -222,6 +230,14 @@ TEST(LexerTests, FloatValueStartingWZero)
     EXPECT_EQ(token.position.getLine(), 1);
     EXPECT_EQ(token.position.getColumn(), 1);
     EXPECT_NEAR(std::get<float>(token.value), .567, 1e-5);
+}
+
+TEST(LexerTests, InvalidFloatValue)
+{
+    Position pos(1, 1);
+    EXPECT_THROW({
+        Token token(T_FLOAT_VALUE, pos, 123);
+    }, LexerException);
 }
 
 TEST(LexerTests, Dot)
@@ -305,6 +321,14 @@ TEST(LexerTests, StringWEscaping)
     EXPECT_EQ(token.position.getLine(), 1);
     EXPECT_EQ(token.position.getColumn(), 1);
     EXPECT_EQ(std::get<std::string>(token.value), "\"Ala\" ma kota\n\ta Bartek nie\\");
+}
+
+TEST(LexerTests, InvalidStringValue)
+{
+    Position pos(1, 1);
+    EXPECT_THROW({
+        Token token(T_STRING_VALUE, pos, 123);
+    }, LexerException);
 }
 
 TEST(LexerTests, ArithmeticSigns)

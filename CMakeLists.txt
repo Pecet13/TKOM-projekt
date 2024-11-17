@@ -15,6 +15,7 @@ add_library(Lexer
     include/lexer/LexerException.h
     src/lexer/Lexer.cpp
     src/lexer/Position.cpp
+    src/lexer/Token.cpp
 )
 target_include_directories(Lexer PUBLIC include)
 
