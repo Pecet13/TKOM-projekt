@@ -1,8 +1,29 @@
 #include "lexer/Lexer.h"
 #include "lexer/LexerException.h"
 
-Lexer::Lexer(std::istream &s, size_t maxIDLen, size_t maxNumLen):
-source(s), position(1, 0), currentToken(T_UNKNOWN, position), maxIDLength(maxIDLen), maxNumberLength(maxNumLen)
+const std::unordered_map<std::string, TokenType> Lexer::keywords = 
+{
+    {"if", T_IF},
+    {"else", T_ELSE},
+    {"while", T_WHILE},
+    {"return", T_RETURN},
+    {"match", T_MATCH},
+    {"void", T_VOID},
+    {"int", T_INT},
+    {"float", T_FLOAT},
+    {"string", T_STRING},
+    {"bool", T_BOOL},
+    {"struct", T_STRUCT},
+    {"variant", T_VARIANT},
+    {"true", T_TRUE},
+    {"false", T_FALSE},
+    {"and", T_AND},
+    {"or", T_OR},
+    {"mut", T_MUT}
+};
+
+Lexer::Lexer(std::istream &s, size_t maxIDLen):
+source(s), position(1, 0), currentToken(T_UNKNOWN, position), maxIDLength(maxIDLen)
 {
     nextChar();
 }
@@ -136,13 +157,13 @@ bool Lexer::checkNumber()
         nextChar();
         while (isdigit(currentChar))
         {
+            if (number > (INT_MAX - currentChar - '0') / 10)
+            {
+                throw LexerException("integer overflow", tokenStartPosition);
+            }
             number = number * 10 + currentChar - '0';
             digitCount++;
             nextChar();
-            if (digitCount > maxNumberLength)
-            {
-                throw LexerException("number too long", tokenStartPosition);
-            }
         }
         if (currentChar == '.')
         {
@@ -156,13 +177,13 @@ bool Lexer::checkNumber()
                 digitCount++;
                 while (isdigit(currentChar))
                 {
+                    if (fraction > (FLT_MAX - currentChar - '0') / 10)
+                    {
+                        throw LexerException("float overflow", tokenStartPosition);
+                    }
                     fraction = fraction * 10 + currentChar - '0';
                     exponent++;
                     nextChar();
-                    if (digitCount > maxNumberLength)
-                    {
-                        throw LexerException("number too long", tokenStartPosition);
-                    }
                 }
             }
             fraction = fraction / pow(10, exponent);
@@ -205,7 +226,31 @@ bool Lexer::checkString()
         nextChar();
         while (currentChar != '"' && currentChar != EOF)
         {
-            text += currentChar;
+            if (currentChar == '\\')
+            {
+                nextChar();
+                switch (currentChar)
+                {
+                case '"':
+                    text += '"';
+                    break;
+                case '\\':
+                    text += '\\';
+                    break;
+                case 'n':
+                    text += '\n';
+                    break;
+                case 't':
+                    text += '\t';
+                    break;
+                default:
+                    throw LexerException("invalid escape sequence", tokenStartPosition);
+                }
+            }
+            else
+            {
+                text += currentChar;
+            }
             nextChar();
         }
         if (currentChar == '"')

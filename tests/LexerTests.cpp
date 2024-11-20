@@ -185,6 +185,14 @@ TEST(LexerTests, IntValue)
     EXPECT_EQ(std::get<int>(token.value), 234);
 }
 
+TEST(LexerTests, InvalidIntValue)
+{
+    Position pos(1, 1);
+    EXPECT_THROW({
+        Token token(T_INT_VALUE, pos, std::string("value"));
+    }, LexerException);
+}
+
 TEST(LexerTests, FloatValue)
 {
     std::string input = "234.567";
@@ -224,6 +232,14 @@ TEST(LexerTests, FloatValueStartingWZero)
     EXPECT_NEAR(std::get<float>(token.value), .567, 1e-5);
 }
 
+TEST(LexerTests, InvalidFloatValue)
+{
+    Position pos(1, 1);
+    EXPECT_THROW({
+        Token token(T_FLOAT_VALUE, pos, 123);
+    }, LexerException);
+}
+
 TEST(LexerTests, Dot)
 {
     std::string input = ".";
@@ -236,7 +252,7 @@ TEST(LexerTests, Dot)
     EXPECT_EQ(token.position.getColumn(), 1);
 }
 
-TEST(LexerTests, NumberTooBig)
+TEST(LexerTests, IntOverflow)
 {
     std::string input = "12345678910111213141516";
     std::stringstream source{input};
@@ -245,7 +261,25 @@ TEST(LexerTests, NumberTooBig)
     EXPECT_THROW(lexer.nextToken(), LexerException);
 }
 
-TEST(LexerTests, NumberStartingWithZeros)
+TEST(LexerTests, FloatOverflow)
+{
+    std::string input = "12345678910111213141.516";
+    std::stringstream source{input};
+    Lexer lexer(source);
+
+    EXPECT_THROW(lexer.nextToken(), LexerException);
+}
+
+TEST(LexerTests, FloatOverflow2)
+{
+    std::string input = "123.456789101112131415161718192021222324252627282930";
+    std::stringstream source{input};
+    Lexer lexer(source);
+
+    EXPECT_THROW(lexer.nextToken(), LexerException);
+}
+
+TEST(LexerTests, IntStartingWithZeros)
 {
     std::string input = "0001";
     std::stringstream source{input};
@@ -254,7 +288,7 @@ TEST(LexerTests, NumberStartingWithZeros)
     EXPECT_THROW(lexer.nextToken(), LexerException);
 }
 
-TEST(LexerTests, NumberStartingWithZeros2)
+TEST(LexerTests, FloatStartingWithZeros)
 {
     std::string input = "00.01";
     std::stringstream source{input};
@@ -274,6 +308,27 @@ TEST(LexerTests, String)
     EXPECT_EQ(token.position.getLine(), 1);
     EXPECT_EQ(token.position.getColumn(), 1);
     EXPECT_EQ(std::get<std::string>(token.value), "Ala ma kota");
+}
+
+TEST(LexerTests, StringWEscaping)
+{
+    std::string input = "\"\\\"Ala\\\" ma kota\\n\\ta Bartek nie\\\\\"";
+    std::stringstream source{input};
+    Lexer lexer(source);
+
+    Token token = lexer.nextToken();
+    EXPECT_EQ(token.type, TokenType::T_STRING_VALUE);
+    EXPECT_EQ(token.position.getLine(), 1);
+    EXPECT_EQ(token.position.getColumn(), 1);
+    EXPECT_EQ(std::get<std::string>(token.value), "\"Ala\" ma kota\n\ta Bartek nie\\");
+}
+
+TEST(LexerTests, InvalidStringValue)
+{
+    Position pos(1, 1);
+    EXPECT_THROW({
+        Token token(T_STRING_VALUE, pos, 123);
+    }, LexerException);
 }
 
 TEST(LexerTests, ArithmeticSigns)

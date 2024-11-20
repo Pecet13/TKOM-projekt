@@ -65,9 +65,11 @@ struct Token
 {
     TokenType type;
     Position position;
-    std::variant<int, float, std::string, bool> value;
+    std::variant<int, float, std::string> value;
 
-    Token(TokenType type, const Position& pos, const std::variant<int, float, std::string, bool>& val) : type(type), position(pos), value(val) {}
+    Token(TokenType type, const Position& pos, int intVal);
+    Token(TokenType type, const Position& pos, float floatVal);
+    Token(TokenType type, const Position& pos, const std::string& stringVal);
     Token(TokenType type, const Position& pos) : type(type), position(pos) {}
 };
 
