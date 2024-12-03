@@ -19,6 +19,13 @@ add_library(Lexer
 )
 target_include_directories(Lexer PUBLIC include)
 
+add_library(Parser
+    include/parser/Parser.h
+    include/parser/nodes/Node.h
+    src/parser/Parser.cpp
+)
+target_include_directories(Parser PUBLIC include)
+
 include(FetchContent)
 FetchContent_Declare(
     googletest

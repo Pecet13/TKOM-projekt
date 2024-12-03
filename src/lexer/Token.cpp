@@ -1,8 +1,8 @@
 #include "lexer/Token.h"
 #include "lexer/LexerException.h"
 
-Token::Token(TokenType type, const Position& pos, int intVal)
-    : type(type), position(pos)
+Token::Token(TokenType type, const Position& pos, int intVal):
+type(type), position(pos)
 {
     if (type == T_INT_VALUE)
     {
@@ -14,8 +14,8 @@ Token::Token(TokenType type, const Position& pos, int intVal)
     }
 }
 
-Token::Token(TokenType type, const Position& pos, float floatVal)
-    : type(type), position(pos)
+Token::Token(TokenType type, const Position& pos, float floatVal):
+type(type), position(pos)
 {
     if (type == T_FLOAT_VALUE)
     {
@@ -27,8 +27,8 @@ Token::Token(TokenType type, const Position& pos, float floatVal)
     }
 }
 
-Token::Token(TokenType type, const Position& pos, const std::string& stringVal)
-    : type(type), position(pos)
+Token::Token(TokenType type, const Position& pos, const std::string& stringVal):
+type(type), position(pos)
 {
     if (type == T_STRING_VALUE || type == T_ID)
     {
