@@ -24,6 +24,8 @@ add_library(Parser
     include/parser/nodes/Node.h
     src/parser/Parser.cpp
 )
+file(GLOB NODE_HEADERS "include/parser/nodes/*.h")
+target_sources(Parser PUBLIC ${NODE_HEADERS})
 target_include_directories(Parser PUBLIC include)
 
 include(FetchContent)

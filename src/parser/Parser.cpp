@@ -1,7 +1,7 @@
 #include "parser/Parser.h"
 
-Parser::Parser(Lexer &l):
-lexer(l), currentToken(Token(T_UNKNOWN, Position(0, 0)))
+Parser::Parser(Lexer &lexer):
+lexer(lexer), currentToken(Token(T_UNKNOWN, Position(0, 0)))
 {
     advance();
 }

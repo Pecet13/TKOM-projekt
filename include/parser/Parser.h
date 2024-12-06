@@ -25,14 +25,15 @@ private:
     std::unique_ptr<Node> parseWhileStatement();
     std::unique_ptr<Node> parseReturnStatement();
     std::unique_ptr<Node> parseMatchStatement();
-    std::unique_ptr<Node> parseExpression();
-    std::unique_ptr<Node> parseLiteral();
-    std::unique_ptr<Node> parseFunctionCall();
-    std::unique_ptr<Node> parseArithmeticOperation();
-    std::unique_ptr<Node> parseLogicalOperation();
-    std::unique_ptr<Node> parseComparison();
     std::unique_ptr<Node> parseParameterList();
     std::unique_ptr<Node> parseParameter();
+    std::unique_ptr<Node> parseExpression();
+    std::unique_ptr<Node> parseAndExpression();
+    std::unique_ptr<Node> parseComparison();
+    std::unique_ptr<Node> parseAddExpression();
+    std::unique_ptr<Node> parseMultExpression();
+    std::unique_ptr<Node> parseTerm();
+    std::unique_ptr<Node> parseIdOrFunctionCall();
     std::unique_ptr<Node> parseArgumentList();
     std::unique_ptr<Node> parseStructCreation();
     std::unique_ptr<Node> parseStructFieldList();
@@ -40,9 +41,10 @@ private:
     std::unique_ptr<Node> parseFieldAccess();
     std::unique_ptr<Node> parseVariant();
     std::unique_ptr<Node> parseMatchCase();
+    std::unique_ptr<Node> parseLiteral();
 
 public:
-    Parser(Lexer &l);
+    Parser(Lexer &lexer);
     std::unique_ptr<Node> parseProgram();
 };
 
