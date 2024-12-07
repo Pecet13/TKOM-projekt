@@ -6,26 +6,20 @@
 #include <vector>
 #include <memory>
 
-class StructDeclarationNode : public DeclarationNode {
+class StructDeclarationNode : public DeclarationNode
+{
 private:
-    std::string name;
-    std::vector<std::unique_ptr<Node>> fields;
+    std::string identifier;
+    std::unique_ptr<Node> fields;
 
 public:
-    StructDeclarationNode(const std::string& name)
-        : name(name) {}
+    StructDeclarationNode(const std::string& identifier, std::unique_ptr<Node> fields)
+        : identifier(identifier), fields(std::move(fields)) {}
 
-    void addField(std::unique_ptr<Node> field) {
-        fields.push_back(std::move(field));
-    }
-
-    std::string toString(int indentLevel = 0) const override {
+    std::string toString(int indentLevel = 0) const override
+    {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "StructDeclaration(name: " + name + ")\n";
-        for (const auto& field : fields) {
-            result += field->toString(indentLevel + 1) + "\n";
-        }
-        return result;
+        return indent + "StructDeclaration(identifier: " + identifier + ")\n" + fields->toString(indentLevel + 1);
     }
 };
 

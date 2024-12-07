@@ -16,10 +16,12 @@ public:
         declarations.push_back(std::move(declaration));
     }
 
-    std::string toString(int indentLevel = 0) const override {
+    std::string toString(int indentLevel = 0) const override
+    {
         std::string indent(indentLevel, '-');
         std::string result = indent + "Program\n";
-        for (const auto& decl : declarations) {
+        for (const auto& decl : declarations)
+        {
             result += decl->toString(indentLevel + 1) + "\n";
         }
         return result;

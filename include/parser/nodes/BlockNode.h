@@ -5,19 +5,23 @@
 #include <vector>
 #include <memory>
 
-class BlockNode : public Node {
+class BlockNode : public Node
+{
 private:
     std::vector<std::unique_ptr<Node>> statements;
 
 public:
-    void addStatement(std::unique_ptr<Node> statement) {
+    void addStatement(std::unique_ptr<Node> statement)
+    {
         statements.push_back(std::move(statement));
     }
 
-    std::string toString(int indentLevel = 0) const override {
+    std::string toString(int indentLevel = 0) const override
+    {
         std::string indent(indentLevel, '-');
         std::string result = indent + "Block\n";
-        for (const auto& stmt : statements) {
+        for (const auto& stmt : statements)
+        {
             result += stmt->toString(indentLevel + 1) + "\n";
         }
         return result;

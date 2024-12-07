@@ -8,18 +8,21 @@
 class VariableDeclarationNode : public DeclarationNode
 {
 private:
+    bool isMutable;
     std::string type;
-    std::string name;
+    std::string identifier;
     std::unique_ptr<Node> initializer;
 
 public:
-    VariableDeclarationNode(const std::string& type, const std::string& name, std::unique_ptr<Node> initializer)
-        : type(type), name(name), initializer(std::move(initializer)) {}
+    VariableDeclarationNode(bool isMutable, const std::string& type, const std::string& identifier, std::unique_ptr<Node> initializer)
+        : isMutable(isMutable), type(type), identifier(identifier), initializer(std::move(initializer)) {}
 
-    std::string toString(int indentLevel = 0) const override {
+    std::string toString(int indentLevel = 0) const override
+    {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "VariableDeclaration(type: " + type + ", name: " + name + ")";
-        if (initializer) {
+        std::string result = indent + "VariableDeclaration("+ (isMutable ? "mut, " : "") + "type: " + type + ", identifier: " + identifier + ")\n";
+        if (initializer)
+        {
             result += "\n" + initializer->toString(indentLevel + 1);
         }
         return result;

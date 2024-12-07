@@ -19,7 +19,8 @@ public:
                             std::unique_ptr<Node> parameters, std::unique_ptr<Node> block)
         : returnType(returnType), name(name), parameters(std::move(parameters)), block(std::move(block)) {}
 
-    std::string toString(int indentLevel = 0) const override {
+    std::string toString(int indentLevel = 0) const override
+    {
         std::string indent(indentLevel, '-');
         return indent + "FunctionDeclaration(returnType: " + returnType + ", name: " + name + ")\n" +
                parameters->toString(indentLevel + 1) + "\n" +

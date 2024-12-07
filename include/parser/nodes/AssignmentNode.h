@@ -5,18 +5,20 @@
 #include <memory>
 #include <string>
 
-class AssignmentNode : public StatementNode {
+class AssignmentNode : public StatementNode
+{
 private:
-    std::string variableName;
+    std::string identifier;
     std::unique_ptr<Node> expression;
 
 public:
-    AssignmentNode(const std::string& variableName, std::unique_ptr<Node> expression)
-        : variableName(variableName), expression(std::move(expression)) {}
+    AssignmentNode(const std::string& identifier, std::unique_ptr<Node> expression)
+        : identifier(identifier), expression(std::move(expression)) {}
 
-    std::string toString(int indentLevel = 0) const override {
+    std::string toString(int indentLevel = 0) const override
+    {
         std::string indent(indentLevel, '-');
-        return indent + "Assignment(variable: " + variableName + ")\n" +
+        return indent + "Assignment(identifier: " + identifier + ")\n" +
                expression->toString(indentLevel + 1);
     }
 };

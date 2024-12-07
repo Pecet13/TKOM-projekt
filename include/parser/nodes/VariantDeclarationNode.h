@@ -6,26 +6,20 @@
 #include <vector>
 #include <memory>
 
-class VariantDeclarationNode : public Node {
+class VariantDeclarationNode : public Node
+{
 private:
-    std::string name;
-    std::vector<std::string> types;
+    std::string identifier;
+    std::unique_ptr<Node> variant;
 
 public:
-    VariantDeclarationNode(const std::string& name)
-        : name(name) {}
+    VariantDeclarationNode(const std::string& identifier, std::unique_ptr<Node> variant)
+        : identifier(identifier), variant(std::move(variant)) {}
 
-    void addType(const std::string& type) {
-        types.push_back(type);
-    }
-
-    std::string toString(int indentLevel = 0) const override {
+    std::string toString(int indentLevel = 0) const override
+    {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "VariantDeclaration(name: " + name + ")\n";
-        for (const auto& type : types) {
-            result += indent + "-" + type + "\n";
-        }
-        return result;
+        return indent + "VariantDeclaration(identifier: " + identifier + ")\n"+ variant->toString(indentLevel + 1);
     }
 };
 
