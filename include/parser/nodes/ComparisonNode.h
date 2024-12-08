@@ -1,7 +1,7 @@
 #ifndef COMPARISON_NODE_H
 #define COMPARISON_NODE_H
 
-#include "Node.h"
+#include "AddExpressionNode.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -9,12 +9,13 @@
 class ComparisonNode : public Node
 {
 private:
-    std::unique_ptr<Node> left;
+    std::unique_ptr<AddExpressionNode> left;
     std::string op;
-    std::unique_ptr<Node> right;
+    std::unique_ptr<AddExpressionNode> right;
 
 public:
-    ComparisonNode(std::unique_ptr<Node> left, const std::string& op, std::unique_ptr<Node> right = nullptr)
+    ComparisonNode(std::unique_ptr<AddExpressionNode> left, const std::string& op = "",
+                    std::unique_ptr<AddExpressionNode> right = nullptr)
         : left(std::move(left)), op(op), right(std::move(right)) {}
 
     std::string toString(int indentLevel = 0) const override

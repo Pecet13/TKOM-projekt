@@ -1,17 +1,17 @@
 #ifndef STRUCT_FIELD_LIST_NODE_H
 #define STRUCT_FIELD_LIST_NODE_H
 
-#include "Node.h"
+#include "StructFieldNode.h"
 #include <vector>
 #include <memory>
 
 class StructFieldListNode : public Node
 {
 private:
-    std::vector<std::unique_ptr<Node>> fields;
+    std::vector<std::unique_ptr<StructFieldNode>> fields;
 
 public:
-    StructFieldListNode(std::vector<std::unique_ptr<Node>> fields)
+    StructFieldListNode(std::vector<std::unique_ptr<StructFieldNode>> fields)
         : fields(std::move(fields)) {}
 
     std::string toString(int indentLevel = 0) const override

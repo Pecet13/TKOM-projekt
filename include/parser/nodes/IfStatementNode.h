@@ -2,17 +2,20 @@
 #define IF_STATEMENT_NODE_H
 
 #include "StatementNode.h"
+#include "ExpressionNode.h"
+#include "BlockNode.h"
 #include <memory>
 
 class IfStatementNode : StatementNode
 {
 private:
-    std::unique_ptr<Node> condition;
-    std::unique_ptr<Node> block;
-    std::unique_ptr<Node> elseBlock;
+    std::unique_ptr<ExpressionNode> condition;
+    std::unique_ptr<BlockNode> block;
+    std::unique_ptr<BlockNode> elseBlock;
 
 public:
-    IfStatementNode(std::unique_ptr<Node> condition, std::unique_ptr<Node> block, std::unique_ptr<Node> elseBlock)
+    IfStatementNode(std::unique_ptr<ExpressionNode> condition, std::unique_ptr<BlockNode> block,
+                    std::unique_ptr<BlockNode> elseBlock = nullptr)
         : condition(std::move(condition)), block(std::move(block)), elseBlock(std::move(elseBlock)) {}
 
     std::string toString(int indentLevel = 0) const override

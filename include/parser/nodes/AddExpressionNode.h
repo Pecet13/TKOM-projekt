@@ -2,6 +2,7 @@
 #define ADD_EXPRESSION_NODE_H
 
 #include "Node.h"
+#include "MultExpressionNode.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -9,14 +10,14 @@
 class AddExpressionNode : public Node
 {
 private:
-    std::unique_ptr<Node> left;
-    std::vector<std::pair<std::string, std::unique_ptr<Node>>> rights;
+    std::unique_ptr<MultExpressionNode> left;
+    std::vector<std::pair<std::string, std::unique_ptr<MultExpressionNode>>> rights;
 
 public:
-    AddExpressionNode(std::unique_ptr<Node> left)
+    AddExpressionNode(std::unique_ptr<MultExpressionNode> left)
         : left(std::move(left)) {}
 
-    void addRight(const std::string& op, std::unique_ptr<Node> right)
+    void addRight(const std::string& op, std::unique_ptr<MultExpressionNode> right)
     {
         rights.emplace_back(op, std::move(right));
     }

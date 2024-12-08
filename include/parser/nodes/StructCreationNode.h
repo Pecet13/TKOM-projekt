@@ -1,7 +1,7 @@
 #ifndef STRUCT_CREATION_NODE_H
 #define STRUCT_CREATION_NODE_H
 
-#include "Node.h"
+#include "ArgumentListNode.h"
 #include <string>
 #include <memory>
 
@@ -10,10 +10,10 @@ class StructCreationNode : public Node
 private:
     std::string type;
     std::string identifier;
-    std::unique_ptr<Node> arguments;
+    std::unique_ptr<ArgumentListNode> arguments;
 
 public:
-    StructCreationNode(const std::string& type, const std::string& identifier, std::unique_ptr<Node> arguments)
+    StructCreationNode(const std::string& type, const std::string& identifier, std::unique_ptr<ArgumentListNode> arguments)
         : type(type), identifier(identifier), arguments(std::move(arguments)) {}
 
     std::string toString(int indentLevel = 0) const override

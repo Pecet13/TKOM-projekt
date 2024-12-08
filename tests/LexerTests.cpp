@@ -67,7 +67,7 @@ TEST(LexerTests, ID)
 
 TEST(LexerTests, MultipleKeywordsAndComments)
 {
-    std::string input = "string\n#comment\nvoid and or #int\nfloat bool true false if else match while";
+    std::string input = "string\n#comment\nvoid and or #int\nfloat bool true false if else match while default";
     std::stringstream source{input};
     Lexer lexer(source);
 
@@ -132,9 +132,14 @@ TEST(LexerTests, MultipleKeywordsAndComments)
     EXPECT_EQ(token.position.getColumn(), 37);
 
     token = lexer.nextToken();
+    EXPECT_EQ(token.type, TokenType::T_DEFAULT);
+    EXPECT_EQ(token.position.getLine(), 4);
+    EXPECT_EQ(token.position.getColumn(), 43);
+
+    token = lexer.nextToken();
     EXPECT_EQ(token.type, TokenType::T_EOF);
     EXPECT_EQ(token.position.getLine(), 4);
-    EXPECT_EQ(token.position.getColumn(), 42);
+    EXPECT_EQ(token.position.getColumn(), 50);
 }
 
 TEST(LexerTests, IDTooLong)

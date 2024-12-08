@@ -1,17 +1,17 @@
 #ifndef PARAMETER_LIST_NODE_H
 #define PARAMETER_LIST_NODE_H
 
-#include "Node.h"
+#include "ParameterNode.h"
 #include <vector>
 #include <memory>
 
 class ParameterListNode : public Node
 {
 private:
-    std::vector<std::unique_ptr<Node>> parameters;
+    std::vector<std::unique_ptr<ParameterNode>> parameters;
 
 public:
-    void addParameter(std::unique_ptr<Node> parameter)
+    void addParameter(std::unique_ptr<ParameterNode> parameter)
     {
         parameters.push_back(std::move(parameter));
     }

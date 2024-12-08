@@ -2,15 +2,16 @@
 #define RETURN_STATEMENT_NODE_H
 
 #include "StatementNode.h"
+#include "ExpressionNode.h"
 #include <memory>
 
 class ReturnStatementNode : public StatementNode
 {
 private:
-    std::unique_ptr<Node> returnValue;
+    std::unique_ptr<ExpressionNode> returnValue;
 
 public:
-    ReturnStatementNode(std::unique_ptr<Node> returnValue)
+    ReturnStatementNode(std::unique_ptr<ExpressionNode> returnValue)
         : returnValue(std::move(returnValue)) {}
 
     std::string toString(int indentLevel = 0) const override

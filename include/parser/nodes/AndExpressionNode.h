@@ -1,21 +1,21 @@
 #ifndef AND_EXPRESSION_NODE_H
 #define AND_EXPRESSION_NODE_H
 
-#include "Node.h"
+#include "ComparisonNode.h"
 #include <vector>
 #include <memory>
 
 class AndExpressionNode : public Node
 {
 private:
-    std::unique_ptr<Node> left;
-    std::vector<std::unique_ptr<Node>> rights;
+    std::unique_ptr<ComparisonNode> left;
+    std::vector<std::unique_ptr<ComparisonNode>> rights;
 
 public:
-    AndExpressionNode(std::unique_ptr<Node> left)
+    AndExpressionNode(std::unique_ptr<ComparisonNode> left)
         : left(std::move(left)) {}
     
-    void addRight(std::unique_ptr<Node> right)
+    void addRight(std::unique_ptr<ComparisonNode> right)
     {
         rights.push_back(std::move(right));
     }

@@ -1,7 +1,7 @@
 #ifndef VARIANT_DECLARATION_NODE_H
 #define VARIANT_DECLARATION_NODE_H
 
-#include "Node.h"
+#include "VariantNode.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -10,10 +10,10 @@ class VariantDeclarationNode : public Node
 {
 private:
     std::string identifier;
-    std::unique_ptr<Node> variant;
+    std::unique_ptr<VariantNode> variant;
 
 public:
-    VariantDeclarationNode(const std::string& identifier, std::unique_ptr<Node> variant)
+    VariantDeclarationNode(const std::string& identifier, std::unique_ptr<VariantNode> variant)
         : identifier(identifier), variant(std::move(variant)) {}
 
     std::string toString(int indentLevel = 0) const override

@@ -2,6 +2,7 @@
 #define VARIABLE_DECLARATION_NODE_H
 
 #include "DeclarationNode.h"
+#include "ExpressionNode.h"
 #include <string>
 #include <memory>
 
@@ -11,10 +12,11 @@ private:
     bool isMutable;
     std::string type;
     std::string identifier;
-    std::unique_ptr<Node> initializer;
+    std::unique_ptr<ExpressionNode> initializer;
 
 public:
-    VariableDeclarationNode(bool isMutable, const std::string& type, const std::string& identifier, std::unique_ptr<Node> initializer)
+    VariableDeclarationNode(bool isMutable, const std::string& type, 
+                            const std::string& identifier, std::unique_ptr<ExpressionNode> initializer = nullptr)
         : isMutable(isMutable), type(type), identifier(identifier), initializer(std::move(initializer)) {}
 
     std::string toString(int indentLevel = 0) const override

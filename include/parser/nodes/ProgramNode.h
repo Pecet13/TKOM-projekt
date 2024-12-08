@@ -1,17 +1,17 @@
 #ifndef PROGRAM_NODE_H
 #define PROGRAM_NODE_H
 
-#include "Node.h"
+#include "DeclarationNode.h"
 #include <vector>
 #include <memory>
 
 class ProgramNode : public Node
 {
 private:
-    std::vector<std::unique_ptr<Node>> declarations;
+    std::vector<std::unique_ptr<DeclarationNode>> declarations;
 
 public:
-    void addDeclaration(std::unique_ptr<Node> declaration)
+    void addDeclaration(std::unique_ptr<DeclarationNode> declaration)
     {
         declarations.push_back(std::move(declaration));
     }

@@ -1,17 +1,17 @@
 #ifndef BLOCK_NODE_H
 #define BLOCK_NODE_H
 
-#include "Node.h"
+#include "StatementNode.h"
 #include <vector>
 #include <memory>
 
 class BlockNode : public Node
 {
 private:
-    std::vector<std::unique_ptr<Node>> statements;
+    std::vector<std::unique_ptr<StatementNode>> statements;
 
 public:
-    void addStatement(std::unique_ptr<Node> statement)
+    void addStatement(std::unique_ptr<StatementNode> statement)
     {
         statements.push_back(std::move(statement));
     }

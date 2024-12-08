@@ -2,20 +2,22 @@
 #define MATCH_STATEMENT_NODE_H
 
 #include "StatementNode.h"
+#include "ExpressionNode.h"
+#include "MatchCaseNode.h"
 #include <memory>
 #include <vector>
 
 class MatchStatementNode : public Node
 {
 private:
-    std::unique_ptr<Node> expression;
-    std::vector<std::unique_ptr<Node>> cases;
+    std::unique_ptr<ExpressionNode> expression;
+    std::vector<std::unique_ptr<MatchCaseNode>> cases;
 
 public:
-    MatchStatementNode(std::unique_ptr<Node> expression)
+    MatchStatementNode(std::unique_ptr<ExpressionNode> expression)
         : expression(std::move(expression)) {}
 
-    void addCase(std::unique_ptr<Node> matchCase)
+    void addCase(std::unique_ptr<MatchCaseNode> matchCase)
     {
         cases.push_back(std::move(matchCase));
     }

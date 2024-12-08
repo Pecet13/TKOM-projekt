@@ -2,6 +2,7 @@
 #define ASSIGNMENT_NODE_H
 
 #include "StatementNode.h"
+#include "ExpressionNode.h"
 #include <memory>
 #include <string>
 
@@ -9,10 +10,10 @@ class AssignmentNode : public StatementNode
 {
 private:
     std::string identifier;
-    std::unique_ptr<Node> expression;
+    std::unique_ptr<ExpressionNode> expression;
 
 public:
-    AssignmentNode(const std::string& identifier, std::unique_ptr<Node> expression)
+    AssignmentNode(const std::string& identifier, std::unique_ptr<ExpressionNode> expression)
         : identifier(identifier), expression(std::move(expression)) {}
 
     std::string toString(int indentLevel = 0) const override

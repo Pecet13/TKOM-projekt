@@ -1,7 +1,7 @@
 #ifndef MULT_EXPRESSION_NODE_H
 #define MULT_EXPRESSION_NODE_H
 
-#include "Node.h"
+#include "TermNode.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -9,14 +9,14 @@
 class MultExpressionNode : public Node
 {
 private:
-    std::unique_ptr<Node> left;
-    std::vector<std::pair<std::string, std::unique_ptr<Node>>> rights;
+    std::unique_ptr<TermNode> left;
+    std::vector<std::pair<std::string, std::unique_ptr<TermNode>>> rights;
 
 public:
-    MultExpressionNode(std::unique_ptr<Node> left)
+    MultExpressionNode(std::unique_ptr<TermNode> left)
         : left(std::move(left)) {}
 
-    void addRight(const std::string& op, std::unique_ptr<Node> right)
+    void addRight(const std::string& op, std::unique_ptr<TermNode> right)
     {
         rights.emplace_back(op, std::move(right));
     }

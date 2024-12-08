@@ -1,7 +1,7 @@
 #ifndef MATCH_CASE_NODE_H
 #define MATCH_CASE_NODE_H
 
-#include "Node.h"
+#include "BlockNode.h"
 #include <string>
 #include <memory>
 
@@ -10,13 +10,13 @@ class MatchCaseNode : public Node
 private:
     std::string type;
     std::string identifier;
-    std::unique_ptr<Node> block;
+    std::unique_ptr<BlockNode> block;
 
 public:
-    MatchCaseNode(const std::string& type, const std::string& identifier, std::unique_ptr<Node> block)
+    MatchCaseNode(const std::string& type, const std::string& identifier, std::unique_ptr<BlockNode> block)
         : type(type), identifier(identifier), block(std::move(block)) {}
 
-    MatchCaseNode(std::unique_ptr<Node> block)
+    MatchCaseNode(std::unique_ptr<BlockNode> block)
         : type("default"), block(std::move(block)) {}
 
     std::string toString(int indentLevel = 0) const override
