@@ -4,16 +4,23 @@
 #include "Node.h"
 #include <string>
 #include <vector>
+#include <variant>
+#include <memory>
 
 class VariantNode : public Node
 {
 private:
-    std::vector<std::string> types;
+    std::vector<std::variant<std::string, std::unique_ptr<VariantNode>>> types;
 
 public:
     void addType(const std::string& type)
     {
         types.push_back(type);
+    }
+
+    void addType(std::unique_ptr<VariantNode> type)
+    {
+        types.push_back(std::move(type));
     }
 
     std::string toString(int indentLevel = 0) const override
@@ -22,7 +29,14 @@ public:
         std::string result = indent + "VariantNode\n";
         for (const auto& type : types)
         {
-            result += indent + "-" + type + "\n";
+            if (std::holds_alternative<std::string>(type))
+            {
+                result += indent + "-" + std::get<std::string>(type) + "\n";
+            }
+            else
+            {
+                result += std::get<std::unique_ptr<VariantNode>>(type)->toString(indentLevel + 1);
+            }
         }
         return result;
     }

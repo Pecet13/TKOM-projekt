@@ -11,19 +11,22 @@ private:
     Position position;
     std::string found;
     std::string expected;
+    std::string fullMessage;
 
 public:
-    ParserException(std::string message, const Position& pos, const std::string& found, const std::string& expected = "")
-        : std::runtime_error(message), position(pos), found(found), expected(expected){}
-
-    virtual const char* what() const noexcept override {
-        std::string fullMessage;
+    ParserException(const std::string& message, const Position& pos, const std::string& found, const std::string& expected = "")
+        : std::runtime_error(message), position(pos), found(found), expected(expected)
+    {
         fullMessage = "Error in line " + std::to_string(position.getLine()) + ", column " + std::to_string(position.getColumn())
-            + ": " + std::runtime_error::what() + "\nFound: " + found;
+            + ": " + message + "\nFound: " + found;
         if (expected != "")
         {
             fullMessage += "\nExpected: " + expected;
         }
+    }
+
+    virtual const char* what() const noexcept override
+    {
         return fullMessage.c_str();
     }
 };

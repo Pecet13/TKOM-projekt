@@ -64,7 +64,6 @@ void Parser::must_be(TokenType tokenType, const std::string& message)
     {
         throw ParserException(message, currentToken.position, tokenTypeToString(currentToken.type), tokenTypeToString(tokenType));
     }
-    advance();
 }
 
 std::string Parser::tokenTypeToString(TokenType type)
@@ -95,9 +94,8 @@ std::unique_ptr<ProgramNode> Parser::parseProgram()
 std::unique_ptr<DeclarationNode> Parser::parseDeclaration()
 {
     std::unique_ptr<DeclarationNode> declaration;
-    if ((declaration = parseFunctionDeclaration()) ||
+    if ((declaration = parseFunctionOrVariableDeclaration()) ||
         (declaration = parseStructDeclaration()) ||
-        (declaration = parseVariableDeclaration()) ||
         (declaration = parseVariantDeclaration()))
     {
         return declaration;
@@ -106,25 +104,91 @@ std::unique_ptr<DeclarationNode> Parser::parseDeclaration()
 }
 
 // function_declaration	=	(type | ‘void’), identifier, ‘(’, parameter_list, ‘)’, block;
-std::unique_ptr<FunctionDeclarationNode> Parser::parseFunctionDeclaration()
+// variable_declaration	=	[‘mut’], type, identifier, [‘=’, expression], ‘;’;
+std::unique_ptr<DeclarationNode> Parser::parseFunctionOrVariableDeclaration()
 {
-    if (currentToken.type != T_INT && currentToken.type != T_FLOAT && currentToken.type != T_STRING &&
+    bool isMutable = false;
+    if (currentToken.type == T_MUT)
+    {
+        isMutable = true;
+        advance();
+    }
+    else if (currentToken.type != T_INT && currentToken.type != T_FLOAT && currentToken.type != T_STRING &&
         currentToken.type != T_BOOL && currentToken.type != T_VOID)
     {
         return nullptr;
     }
+
     std::string type = tokenTypeToString(currentToken.type);
     advance();
 
     must_be(T_ID, "missing identifier");
     std::string identifier = std::get<std::string>(currentToken.value);
+    advance();
 
-    must_be(T_BRACKET_OPEN, "invalid token");
-    std::unique_ptr<ParameterListNode> parameterList = parseParameterList();
+    if (currentToken.type == T_BRACKET_OPEN)
+    {
+        advance();
+        std::unique_ptr<ParameterListNode> parameterList = parseParameterList();
 
-    must_be(T_BRACKET_CLOSE, "invalid token");
-    std::unique_ptr<BlockNode> block = parseBlock();
-    
-    std::unique_ptr<FunctionDeclarationNode> functionDeclaration = std::make_unique<FunctionDeclarationNode>(type, identifier, std::move(parameterList), std::move(block));
-    return functionDeclaration;
+        must_be(T_BRACKET_CLOSE, "invalid token");
+        advance();
+        std::unique_ptr<BlockNode> block = parseBlock();
+        
+        std::unique_ptr<FunctionDeclarationNode> functionDeclaration = std::make_unique<FunctionDeclarationNode>(type, identifier, std::move(parameterList), std::move(block));
+        return functionDeclaration;
+    }
+
+    if (type == "void")
+    {
+        throw ParserException("variable cannot be void", currentToken.position, tokenTypeToString(currentToken.type));
+    }
+
+    std::unique_ptr<ExpressionNode> expression = nullptr;
+    if (currentToken.type == T_ASSIGN)
+    {
+        advance();
+        expression = parseExpression();
+    }
+
+    must_be(T_SEMICOLON, "missing semicolon");
+    advance();
+    std::unique_ptr<VariableDeclarationNode> variableDeclaration = std::make_unique<VariableDeclarationNode>(isMutable, type, identifier, std::move(expression));
+    return variableDeclaration;
+}
+
+// variant_declaration	=	variant, identifier;
+std::unique_ptr<VariantDeclarationNode> Parser::parseVariantDeclaration()
+{
+    std::unique_ptr<VariantNode> variant = parseVariant();
+
+    must_be(T_ID, "missing identifier");
+    std::string identifier = std::get<std::string>(currentToken.value);
+    advance();
+
+    std::unique_ptr<VariantDeclarationNode> variantDeclaration = std::make_unique<VariantDeclarationNode>(std::move(variant), identifier);
+    return variantDeclaration;
+}
+
+// struct_declaration	=	‘struct’, identifier, ‘[’, struct_field_list, ‘]’;
+std::unique_ptr<StructDeclarationNode> Parser::parseStructDeclaration()
+{
+    if (currentToken.type != T_STRUCT)
+    {
+        return nullptr;
+    }
+
+    must_be(T_ID, "missing identifier");
+    std::string identifier = std::get<std::string>(currentToken.value);
+    advance();
+
+    must_be(T_SQUARE_OPEN, "invalid token");
+    advance();
+    std::unique_ptr<StructFieldListNode> fieldList = parseStructFieldList();
+
+    must_be(T_SQUARE_CLOSE, "invalid token");
+    advance();
+
+    std::unique_ptr<StructDeclarationNode> structDeclaration = std::make_unique<StructDeclarationNode>(identifier, std::move(fieldList));
+    return structDeclaration;
 }

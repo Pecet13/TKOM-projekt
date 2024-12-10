@@ -12,20 +12,20 @@ private:
     bool isMutable;
     std::string type;
     std::string identifier;
-    std::unique_ptr<ExpressionNode> initializer;
+    std::unique_ptr<ExpressionNode> expression;
 
 public:
     VariableDeclarationNode(bool isMutable, const std::string& type, 
-                            const std::string& identifier, std::unique_ptr<ExpressionNode> initializer = nullptr)
-        : isMutable(isMutable), type(type), identifier(identifier), initializer(std::move(initializer)) {}
+                            const std::string& identifier, std::unique_ptr<ExpressionNode> expression = nullptr)
+        : isMutable(isMutable), type(type), identifier(identifier), expression(std::move(expression)) {}
 
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
         std::string result = indent + "VariableDeclaration("+ (isMutable ? "mut, " : "") + "type: " + type + ", identifier: " + identifier + ")\n";
-        if (initializer)
+        if (expression)
         {
-            result += "\n" + initializer->toString(indentLevel + 1);
+            result += "\n" + expression->toString(indentLevel + 1);
         }
         return result;
     }

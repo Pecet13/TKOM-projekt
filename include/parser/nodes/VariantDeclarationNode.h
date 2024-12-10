@@ -10,12 +10,12 @@
 class VariantDeclarationNode : public DeclarationNode
 {
 private:
-    std::string identifier;
     std::unique_ptr<VariantNode> variant;
+    std::string identifier;
 
 public:
-    VariantDeclarationNode(const std::string& identifier, std::unique_ptr<VariantNode> variant)
-        : identifier(identifier), variant(std::move(variant)) {}
+    VariantDeclarationNode(std::unique_ptr<VariantNode> variant, const std::string& identifier)
+        : variant(std::move(variant)), identifier(identifier)  {}
 
     std::string toString(int indentLevel = 0) const override
     {

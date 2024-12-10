@@ -12,9 +12,8 @@
 #include "nodes/ComparisonNode.h"
 #include "nodes/DeclarationNode.h"
 #include "nodes/ExpressionNode.h"
-#include "nodes/FieldAccessNode.h"
+#include "nodes/FieldOrFunCallNode.h"
 #include "nodes/FunctionDeclarationNode.h"
-#include "nodes/IdOrFunctionCallNode.h"
 #include "nodes/IfStatementNode.h"
 #include "nodes/LiteralNode.h"
 #include "nodes/MatchCaseNode.h"
@@ -48,8 +47,7 @@ private:
     static std::string tokenTypeToString(TokenType type);
 
     std::unique_ptr<DeclarationNode> parseDeclaration();
-    std::unique_ptr<FunctionDeclarationNode> parseFunctionDeclaration();
-    std::unique_ptr<VariableDeclarationNode> parseVariableDeclaration();
+    std::unique_ptr<DeclarationNode> parseFunctionOrVariableDeclaration();
     std::unique_ptr<VariantDeclarationNode> parseVariantDeclaration();
     std::unique_ptr<StructDeclarationNode> parseStructDeclaration();
     std::unique_ptr<BlockNode> parseBlock();
@@ -67,12 +65,11 @@ private:
     std::unique_ptr<AddExpressionNode> parseAddExpression();
     std::unique_ptr<MultExpressionNode> parseMultExpression();
     std::unique_ptr<TermNode> parseTerm();
-    std::unique_ptr<IdOrFunctionCallNode> parseIdOrFunctionCall();
+    std::unique_ptr<FieldOrFunCallNode> parseFieldOrFunCall();
     std::unique_ptr<ArgumentListNode> parseArgumentList();
     std::unique_ptr<StructCreationNode> parseStructCreation();
     std::unique_ptr<StructFieldListNode> parseStructFieldList();
     std::unique_ptr<StructFieldNode> parseStructField();
-    std::unique_ptr<FieldAccessNode> parseFieldAccess();
     std::unique_ptr<VariantNode> parseVariant();
     std::unique_ptr<MatchCaseNode> parseMatchCase();
     std::unique_ptr<LiteralNode> parseLiteral();
