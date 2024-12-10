@@ -1,12 +1,13 @@
 #ifndef VARIANT_DECLARATION_NODE_H
 #define VARIANT_DECLARATION_NODE_H
 
+#include "DeclarationNode.h"
 #include "VariantNode.h"
 #include <string>
 #include <vector>
 #include <memory>
 
-class VariantDeclarationNode : public Node
+class VariantDeclarationNode : public DeclarationNode
 {
 private:
     std::string identifier;

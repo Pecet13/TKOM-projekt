@@ -11,13 +11,18 @@ private:
     std::unique_ptr<ExpressionNode> returnValue;
 
 public:
-    ReturnStatementNode(std::unique_ptr<ExpressionNode> returnValue)
+    ReturnStatementNode(std::unique_ptr<ExpressionNode> returnValue = nullptr)
         : returnValue(std::move(returnValue)) {}
 
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        return indent + "ReturnStatement\n" + returnValue->toString(indentLevel + 1);
+        std::string result = indent + "ReturnStatement\n";
+        if (returnValue)
+        {
+            result += returnValue->toString(indentLevel + 1);
+        }
+        return result;
     }
 };
 

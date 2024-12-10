@@ -8,17 +8,22 @@
 class ParserException : public std::runtime_error
 {
 private:
-    Token token;
-    TokenType expected;
+    Position position;
+    std::string found;
+    std::string expected;
 
 public:
-    ParserException(std::string message, Token token, TokenType expected)
-        : std::runtime_error(message), token(token), expected(expected){}
+    ParserException(std::string message, const Position& pos, const std::string& found, const std::string& expected = "")
+        : std::runtime_error(message), position(pos), found(found), expected(expected){}
 
     virtual const char* what() const noexcept override {
         std::string fullMessage;
-        fullMessage = "Error in line " + std::to_string(token.position.getLine()) + ", column " + std::to_string(token.position.getColumn()) 
-            + ": " + std::runtime_error::what() + "\nFound: " + std::to_string(token.type) + "\nExpected: " + std::to_string(expected);
+        fullMessage = "Error in line " + std::to_string(position.getLine()) + ", column " + std::to_string(position.getColumn())
+            + ": " + std::runtime_error::what() + "\nFound: " + found;
+        if (expected != "")
+        {
+            fullMessage += "\nExpected: " + expected;
+        }
         return fullMessage.c_str();
     }
 };

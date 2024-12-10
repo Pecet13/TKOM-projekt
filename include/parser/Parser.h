@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include "lexer/Lexer.h"
+#include "ParserException.h"
 #include "nodes/Node.h"
 #include "nodes/AddExpressionNode.h"
 #include "nodes/AndExpressionNode.h"
@@ -40,8 +41,11 @@ class Parser
 private:
     Lexer &lexer;
     Token currentToken;
+    static const std::unordered_map<TokenType, std::string> tokenTypeToStringMap;
 
     void advance();
+    void must_be(TokenType tokenType, const std::string& message);
+    static std::string tokenTypeToString(TokenType type);
 
     std::unique_ptr<DeclarationNode> parseDeclaration();
     std::unique_ptr<FunctionDeclarationNode> parseFunctionDeclaration();
