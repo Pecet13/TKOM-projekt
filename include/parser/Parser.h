@@ -52,6 +52,7 @@ private:
     std::unique_ptr<StructDeclarationNode> parseStructDeclaration();
     std::unique_ptr<BlockNode> parseBlock();
     std::unique_ptr<StatementNode> parseStatement();
+    std::unique_ptr<VariableDeclarationNode> parseVariableDeclaration();
     std::unique_ptr<AssignmentNode> parseAssignment();
     std::unique_ptr<IfStatementNode> parseIfStatement();
     std::unique_ptr<WhileStatementNode> parseWhileStatement();

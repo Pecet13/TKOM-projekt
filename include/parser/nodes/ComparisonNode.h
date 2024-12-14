@@ -21,11 +21,11 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "ComparisonNode\n";
+        std::string result = indent + "Comparison\n";
         result += left->toString(indentLevel + 1);
         if (right)
         {
-            result += indent + "-" + op + "\n" + right->toString(indentLevel + 1);
+            result += indent + "-operator: " + op + "\n" + right->toString(indentLevel + 1);
         }
         return result;
     }

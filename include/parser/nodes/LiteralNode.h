@@ -26,7 +26,7 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "LiteralNode(";
+        std::string result = indent + "Literal(";
         if (std::holds_alternative<int>(value))
         {
             result += "int: " + std::to_string(std::get<int>(value));

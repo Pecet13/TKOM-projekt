@@ -6,7 +6,7 @@
 #include "BlockNode.h"
 #include <memory>
 
-class IfStatementNode : StatementNode
+class IfStatementNode : public StatementNode
 {
 private:
     std::unique_ptr<ExpressionNode> condition;
@@ -22,11 +22,11 @@ public:
     {
         std::string indent(indentLevel, '-');
         std::string result = indent + "IfStatement\n" +
-                            condition->toString(indentLevel + 1) + "\n" +
+                            condition->toString(indentLevel + 1) +
                             block->toString(indentLevel + 1);
         if (elseBlock)
         {
-            result += "\n" + indent + "Else\n" + elseBlock->toString(indentLevel + 1);
+            result += indent + "Else\n" + elseBlock->toString(indentLevel + 1);
         }
         return result;
     }

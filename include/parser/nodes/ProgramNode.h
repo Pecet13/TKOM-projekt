@@ -22,7 +22,7 @@ public:
         std::string result = indent + "Program\n";
         for (const auto& decl : declarations)
         {
-            result += decl->toString(indentLevel + 1) + "\n";
+            result += decl->toString(indentLevel + 1);
         }
         return result;
     }

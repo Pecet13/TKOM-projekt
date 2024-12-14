@@ -19,7 +19,7 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "ArgumentListNode\n";
+        std::string result = indent + "ArgumentList\n";
         for (const auto& arg : arguments)
         {
             result += arg->toString(indentLevel + 1);

@@ -27,16 +27,16 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "MatchCaseNode\n";
+        std::string result = indent + "MatchCase";
         if (std::holds_alternative<std::string>(type))
         {
             if (std::get<std::string>(type) == "default")
             {
-                result += indent + "default\n";
+                result += "(default)\n";
             }
             else
             {
-                result += indent + "(type: " + std::get<std::string>(type) + "\n" + indent + ", identifier: " + identifier + ")\n";
+                result += "(type: " + std::get<std::string>(type) + ", identifier: " + identifier + ")\n";
             }
         }
         else

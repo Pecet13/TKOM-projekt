@@ -26,7 +26,7 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "VariantNode\n";
+        std::string result = indent + "Variant\n";
         for (const auto& type : types)
         {
             if (std::holds_alternative<std::string>(type))

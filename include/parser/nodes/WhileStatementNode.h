@@ -20,7 +20,7 @@ public:
     {
         std::string indent(indentLevel, '-');
         return indent + "WhileStatement\n" +
-               condition->toString(indentLevel + 1) + "\n" +
+               condition->toString(indentLevel + 1) +
                block->toString(indentLevel + 1);
     }
 };

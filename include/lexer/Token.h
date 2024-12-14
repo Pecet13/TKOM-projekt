@@ -13,6 +13,7 @@ enum TokenType
     T_RETURN,
     T_MATCH,
     T_DEFAULT,
+    T_NEW,
 
     T_VOID,
     T_INT,

@@ -8,19 +8,19 @@
 class ReturnStatementNode : public StatementNode
 {
 private:
-    std::unique_ptr<ExpressionNode> returnValue;
+    std::unique_ptr<ExpressionNode> expression;
 
 public:
-    ReturnStatementNode(std::unique_ptr<ExpressionNode> returnValue = nullptr)
-        : returnValue(std::move(returnValue)) {}
+    ReturnStatementNode(std::unique_ptr<ExpressionNode> expression = nullptr)
+        : expression(std::move(expression)) {}
 
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
         std::string result = indent + "ReturnStatement\n";
-        if (returnValue)
+        if (expression)
         {
-            result += returnValue->toString(indentLevel + 1);
+            result += expression->toString(indentLevel + 1);
         }
         return result;
     }

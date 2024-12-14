@@ -2,11 +2,12 @@
 #define VARIABLE_DECLARATION_NODE_H
 
 #include "DeclarationNode.h"
+#include "StatementNode.h"
 #include "ExpressionNode.h"
 #include <string>
 #include <memory>
 
-class VariableDeclarationNode : public DeclarationNode
+class VariableDeclarationNode : public DeclarationNode, public StatementNode
 {
 private:
     bool isMutable;
@@ -22,10 +23,10 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "VariableDeclaration("+ (isMutable ? "mut, " : "") + "type: " + type + ", identifier: " + identifier + ")\n";
+        std::string result = indent + "VariableDeclaration(" + (isMutable ? "mut, " : "") + "type: " + type + ", identifier: " + identifier + ")\n";
         if (expression)
         {
-            result += "\n" + expression->toString(indentLevel + 1);
+            result += expression->toString(indentLevel + 1);
         }
         return result;
     }

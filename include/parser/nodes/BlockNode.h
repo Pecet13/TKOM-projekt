@@ -22,7 +22,7 @@ public:
         std::string result = indent + "Block\n";
         for (const auto& stmt : statements)
         {
-            result += stmt->toString(indentLevel + 1) + "\n";
+            result += stmt->toString(indentLevel + 1);
         }
         return result;
     }

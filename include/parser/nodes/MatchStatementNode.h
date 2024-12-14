@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-class MatchStatementNode : public Node
+class MatchStatementNode : public StatementNode
 {
 private:
     std::unique_ptr<ExpressionNode> expression;
@@ -26,10 +26,10 @@ public:
     {
         std::string indent(indentLevel, '-');
         std::string result = indent + "MatchStatement\n" +
-                             expression->toString(indentLevel + 1) + "\n";
+                             expression->toString(indentLevel + 1);
         for (const auto& matchCase : cases)
         {
-            result += matchCase->toString(indentLevel + 1) + "\n";
+            result += matchCase->toString(indentLevel + 1);
         }
         return result;
     }

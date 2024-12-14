@@ -25,7 +25,7 @@ public:
     {
         std::string indent(indentLevel, '-');
         return indent + "FunctionDeclaration(type: " + type + ", identifier: " + identifier + ")\n" +
-               parameters->toString(indentLevel + 1) + "\n" +
+               parameters->toString(indentLevel + 1) +
                block->toString(indentLevel + 1);
     }
 };

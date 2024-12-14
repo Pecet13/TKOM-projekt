@@ -1,11 +1,12 @@
 #ifndef STRUCT_CREATION_NODE_H
 #define STRUCT_CREATION_NODE_H
 
+#include "StatementNode.h"
 #include "ArgumentListNode.h"
 #include <string>
 #include <memory>
 
-class StructCreationNode : public Node
+class StructCreationNode : public StatementNode
 {
 private:
     std::string type;
@@ -19,7 +20,7 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        return indent + "StructCreationNode(type: " + type + ", identifier: " + identifier + "\n" +
+        return indent + "StructCreation(type: " + type + ", identifier: " + identifier + ")\n" +
                 arguments->toString(indentLevel + 1);
     }
 };

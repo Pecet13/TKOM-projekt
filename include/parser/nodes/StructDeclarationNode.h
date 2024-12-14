@@ -2,12 +2,13 @@
 #define STRUCT_DECLARATION_NODE_H
 
 #include "DeclarationNode.h"
+#include "StatementNode.h"
 #include "StructFieldListNode.h"
 #include <string>
 #include <vector>
 #include <memory>
 
-class StructDeclarationNode : public DeclarationNode
+class StructDeclarationNode : public DeclarationNode, public StatementNode
 {
 private:
     std::string identifier;

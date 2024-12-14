@@ -2,12 +2,13 @@
 #define VARIANT_DECLARATION_NODE_H
 
 #include "DeclarationNode.h"
+#include "StatementNode.h"
 #include "VariantNode.h"
 #include <string>
 #include <vector>
 #include <memory>
 
-class VariantDeclarationNode : public DeclarationNode
+class VariantDeclarationNode : public DeclarationNode, public StatementNode
 {
 private:
     std::unique_ptr<VariantNode> variant;

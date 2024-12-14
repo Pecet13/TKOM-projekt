@@ -23,7 +23,7 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "ExpressionNode\n";
+        std::string result = indent + "Expression\n";
         result += left->toString(indentLevel + 1);
         for (const auto& right : rights)
         {

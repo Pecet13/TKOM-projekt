@@ -24,11 +24,11 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "MultExpressionNode\n";
+        std::string result = indent + "MultExpression\n";
         result += left->toString(indentLevel + 1);
         for (const auto& pair : rights)
         {
-            result += indent + "-" + pair.first + "\n" + pair.second->toString(indentLevel + 1);
+            result += indent + "-operator: " + pair.first + "\n" + pair.second->toString(indentLevel + 1);
         }
         return result;
     }

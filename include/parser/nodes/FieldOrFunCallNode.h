@@ -26,7 +26,7 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "FieldOrFunCallNode(identifier: " + identifier + ")\n";
+        std::string result = indent + "FieldOrFunCall(identifier: " + identifier + ")\n";
         if (std::holds_alternative<std::vector<std::string>>(additionalContent))
         {
             indentLevel++;

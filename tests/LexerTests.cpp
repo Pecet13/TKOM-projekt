@@ -67,7 +67,7 @@ TEST(LexerTests, ID)
 
 TEST(LexerTests, MultipleKeywordsAndComments)
 {
-    std::string input = "string\n#comment\nvoid and or #int\nfloat bool true false if else match while default";
+    std::string input = "string\n#comment\nvoid and or #int\nfloat bool true false if else match while default new";
     std::stringstream source{input};
     Lexer lexer(source);
 
@@ -137,9 +137,14 @@ TEST(LexerTests, MultipleKeywordsAndComments)
     EXPECT_EQ(token.position.getColumn(), 43);
 
     token = lexer.nextToken();
+    EXPECT_EQ(token.type, TokenType::T_NEW);
+    EXPECT_EQ(token.position.getLine(), 4);
+    EXPECT_EQ(token.position.getColumn(), 51);
+
+    token = lexer.nextToken();
     EXPECT_EQ(token.type, TokenType::T_EOF);
     EXPECT_EQ(token.position.getLine(), 4);
-    EXPECT_EQ(token.position.getColumn(), 50);
+    EXPECT_EQ(token.position.getColumn(), 54);
 }
 
 TEST(LexerTests, IDTooLong)
@@ -480,11 +485,11 @@ TEST(LexerTests, VariableDeclaration)
 
 TEST(LexerTests, StructDeclaration)
 {
-    std::string input = ("struct Item\n"
+    std::string input = "struct Item\n"
                         "[\n"
                         "string name;\n"
                         "mut float value;\n"
-                        "]");
+                        "]";
     std::stringstream source{input};
     Lexer lexer(source);
 
@@ -549,54 +554,59 @@ TEST(LexerTests, StructDeclaration)
 
 TEST(LexerTests, StructCreation)
 {
-    std::string input = ("Item my_item(\"bread\", 3.45);\n"
-                        "my_item.value = 4.56;");
+    std::string input = "new Item my_item(\"bread\", 3.45);\n"
+                        "my_item.value = 4.56;";
     std::stringstream source{input};
     Lexer lexer(source);
 
     Token token = lexer.nextToken();
-    EXPECT_EQ(token.type, TokenType::T_ID);
+    EXPECT_EQ(token.type, TokenType::T_NEW);
     EXPECT_EQ(token.position.getLine(), 1);
     EXPECT_EQ(token.position.getColumn(), 1);
+
+    token = lexer.nextToken();
+    EXPECT_EQ(token.type, TokenType::T_ID);
+    EXPECT_EQ(token.position.getLine(), 1);
+    EXPECT_EQ(token.position.getColumn(), 5);
     EXPECT_EQ(std::get<std::string>(token.value), "Item");
 
     token = lexer.nextToken();
     EXPECT_EQ(token.type, TokenType::T_ID);
     EXPECT_EQ(token.position.getLine(), 1);
-    EXPECT_EQ(token.position.getColumn(), 6);
+    EXPECT_EQ(token.position.getColumn(), 10);
     EXPECT_EQ(std::get<std::string>(token.value), "my_item");
 
     token = lexer.nextToken();
     EXPECT_EQ(token.type, TokenType::T_BRACKET_OPEN);
     EXPECT_EQ(token.position.getLine(), 1);
-    EXPECT_EQ(token.position.getColumn(), 13);
+    EXPECT_EQ(token.position.getColumn(), 17);
 
     token = lexer.nextToken();
     EXPECT_EQ(token.type, TokenType::T_STRING_VALUE);
     EXPECT_EQ(token.position.getLine(), 1);
-    EXPECT_EQ(token.position.getColumn(), 14);
+    EXPECT_EQ(token.position.getColumn(), 18);
     EXPECT_EQ(std::get<std::string>(token.value), "bread");
 
     token = lexer.nextToken();
     EXPECT_EQ(token.type, TokenType::T_COMMA);
     EXPECT_EQ(token.position.getLine(), 1);
-    EXPECT_EQ(token.position.getColumn(), 21);
+    EXPECT_EQ(token.position.getColumn(), 25);
 
     token = lexer.nextToken();
     EXPECT_EQ(token.type, TokenType::T_FLOAT_VALUE);
     EXPECT_EQ(token.position.getLine(), 1);
-    EXPECT_EQ(token.position.getColumn(), 23);
+    EXPECT_EQ(token.position.getColumn(), 27);
     EXPECT_NEAR(std::get<float>(token.value), 3.45, 1e-5);
 
     token = lexer.nextToken();
     EXPECT_EQ(token.type, TokenType::T_BRACKET_CLOSE);
     EXPECT_EQ(token.position.getLine(), 1);
-    EXPECT_EQ(token.position.getColumn(), 27);
+    EXPECT_EQ(token.position.getColumn(), 31);
 
     token = lexer.nextToken();
     EXPECT_EQ(token.type, TokenType::T_SEMICOLON);
     EXPECT_EQ(token.position.getLine(), 1);
-    EXPECT_EQ(token.position.getColumn(), 28);
+    EXPECT_EQ(token.position.getColumn(), 32);
 
     token = lexer.nextToken();
     EXPECT_EQ(token.type, TokenType::T_ID);
