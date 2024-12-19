@@ -19,6 +19,17 @@ add_library(Lexer
 )
 target_include_directories(Lexer PUBLIC include)
 
+add_library(Parser
+    include/parser/Parser.h
+    include/parser/nodes/Node.h
+    src/parser/Parser.cpp
+)
+file(GLOB NODE_HEADERS "include/parser/nodes/*.h")
+target_sources(Parser PUBLIC ${NODE_HEADERS})
+target_include_directories(Parser PUBLIC include)
+
+target_link_libraries(Parser PUBLIC Lexer)
+
 include(FetchContent)
 FetchContent_Declare(
     googletest
@@ -33,3 +44,8 @@ enable_testing()
 add_executable(LexerTests tests/LexerTests.cpp)
 target_link_libraries(LexerTests gtest_main Lexer)
 gtest_discover_tests(LexerTests)
+
+add_executable(ParserTests tests/ParserTests.cpp)
+target_link_libraries(ParserTests gtest_main Parser)
+gtest_discover_tests(ParserTests)
+target_link_libraries(ParserTests gtest_main Parser Lexer)

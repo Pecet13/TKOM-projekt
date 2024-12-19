@@ -8,6 +8,8 @@ const std::unordered_map<std::string, TokenType> Lexer::keywords =
     {"while", T_WHILE},
     {"return", T_RETURN},
     {"match", T_MATCH},
+    {"default", T_DEFAULT},
+    {"new", T_NEW},
     {"void", T_VOID},
     {"int", T_INT},
     {"float", T_FLOAT},
