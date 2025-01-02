@@ -4,20 +4,36 @@
 #include "Node.h"
 #include <memory>
 
+enum class NegationType
+{
+    NONE,
+    LOGICAL,
+    ARITHMETICAL
+};
+
 class TermNode : public Node
 {
 private:
-    bool isPositive;
+    NegationType negationType;
     std::unique_ptr<Node> content;
 
 public:
-    TermNode(bool isPositive, std::unique_ptr<Node> content)
-        : isPositive(isPositive), content(std::move(content)) {}
+    TermNode(NegationType negationType, std::unique_ptr<Node> content)
+        : negationType(negationType), content(std::move(content)) {}
 
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        return indent + "Term\n" + (isPositive ? "" : indent + "!\n") + content->toString(indentLevel + 1);
+        std::string result = indent + "Term\n";
+        if (negationType == NegationType::LOGICAL)
+        {
+            result += "(negation: logical)"; 
+        }
+        else if (negationType == NegationType::ARITHMETICAL)
+        {
+            result += "(negation: arithmetical)"; 
+        }
+        return result + content->toString(indentLevel + 1);
     }
 };
 

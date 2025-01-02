@@ -1,6 +1,6 @@
 #include "parser/Parser.h"
 
-const std::unordered_map<TokenType, std::string> Parser::tokenTypeToStringMap = 
+const std::unordered_map<TokenType, std::string> tokenTypeToStringMap = 
 {
     {T_IF, "if"},
     {T_ELSE, "else"},
@@ -48,6 +48,16 @@ const std::unordered_map<TokenType, std::string> Parser::tokenTypeToStringMap =
     {T_UNKNOWN, "unknown"}
 };
 
+std::string tokenTypeToString(TokenType type)
+{
+    auto it = tokenTypeToStringMap.find(type);
+    if (it != tokenTypeToStringMap.end())
+    {
+        return it->second;
+    }
+    return "unknown";
+}
+
 Parser::Parser(Lexer &lexer):
 lexer(lexer), currentToken(Token(T_UNKNOWN, Position(0, 0)))
 {
@@ -65,16 +75,6 @@ void Parser::must_be(TokenType tokenType, const std::string& message)
     {
         throw ParserException(message, currentToken.position, tokenTypeToString(currentToken.type), tokenTypeToString(tokenType));
     }
-}
-
-std::string Parser::tokenTypeToString(TokenType type)
-{
-    auto it = tokenTypeToStringMap.find(type);
-    if (it != tokenTypeToStringMap.end())
-    {
-        return it->second;
-    }
-    return "unknown";
 }
 
 // program		=	{declaration};
@@ -115,8 +115,7 @@ std::unique_ptr<DeclarationNode> Parser::parseFunctionOrVariableDeclaration()
         isMutable = true;
         advance();
     }
-    else if (currentToken.type != T_INT && currentToken.type != T_FLOAT && currentToken.type != T_STRING &&
-        currentToken.type != T_BOOL && currentToken.type != T_VOID)
+    else if (!parseType() && currentToken.type != T_VOID)
     {
         return nullptr;
     }
@@ -400,16 +399,7 @@ std::unique_ptr<ReturnStatementNode> Parser::parseReturnStatement()
     }
     advance();
 
-    if (currentToken.type == T_SEMICOLON)
-    {
-        return std::make_unique<ReturnStatementNode>();
-    }
-
     std::unique_ptr<ExpressionNode> expression = parseExpression();
-    if (!expression)
-    {
-        throw ParserException("missing expression", currentToken.position, tokenTypeToString(currentToken.type));
-    }
 
     must_be(T_SEMICOLON, "missing semicolon");
     advance();
@@ -476,8 +466,7 @@ std::unique_ptr<ParameterListNode> Parser::parseParameterList()
 // parameter		=	(type | variant), identifier;
 std::unique_ptr<ParameterNode> Parser::parseParameter()
 {
-    if (currentToken.type == T_INT || currentToken.type == T_FLOAT || currentToken.type == T_STRING ||
-        currentToken.type == T_BOOL)
+    if (parseType())
     {
         std::string type = tokenTypeToString(currentToken.type);
         advance();
@@ -488,7 +477,7 @@ std::unique_ptr<ParameterNode> Parser::parseParameter()
 
         return std::make_unique<ParameterNode>(type, identifier);
     }
-    else if (auto variant = parseVariant())
+    if (auto variant = parseVariant())
     {
         advance();
 
@@ -571,7 +560,30 @@ std::unique_ptr<ComparisonNode> Parser::parseComparison()
         return std::make_unique<ComparisonNode>(std::move(addExpression));
     }
 
-    std::string op = tokenTypeToString(currentToken.type);
+    ComparisonOperator op;
+    switch (currentToken.type) 
+    {
+        case T_EQUAL: 
+            op = ComparisonOperator::EQUAL;
+            break;
+        case T_NOT_EQUAL:
+            op = ComparisonOperator::NOT_EQUAL;
+            break;
+        case T_GREATER:
+            op = ComparisonOperator::GREATER;
+            break;
+        case T_LESS:
+            op = ComparisonOperator::LESS;
+            break;
+        case T_GREATER_EQUAL:
+            op = ComparisonOperator::GREATER_EQUAL;
+            break;
+        case T_LESS_EQUAL:
+            op = ComparisonOperator::LESS_EQUAL;
+            break;
+        default:
+            throw ParserException("invalid comparison operator", currentToken.position, tokenTypeToString(currentToken.type));
+    }
     advance();
 
     std::unique_ptr<AddExpressionNode> rightAddExpression = parseAddExpression();
@@ -596,7 +608,16 @@ std::unique_ptr<AddExpressionNode> Parser::parseAddExpression()
 
     while (currentToken.type == T_PLUS || currentToken.type == T_MINUS)
     {
-        std::string op = tokenTypeToString(currentToken.type);
+        AddOperator op;
+        switch (currentToken.type)
+        {
+            case T_PLUS:
+                op = AddOperator::PLUS;
+                break;
+            case T_MINUS:
+                op = AddOperator::MINUS;
+                break;
+        }
         advance();
 
         std::unique_ptr<MultExpressionNode> rightMultExpression = parseMultExpression();
@@ -624,7 +645,16 @@ std::unique_ptr<MultExpressionNode> Parser::parseMultExpression()
 
     while (currentToken.type == T_ASTERISK || currentToken.type == T_SLASH)
     {
-        std::string op = tokenTypeToString(currentToken.type);
+        MultOperator op;
+        switch (currentToken.type)
+        {
+            case T_ASTERISK:
+                op = MultOperator::ASTERISK;
+                break;
+            case T_MINUS:
+                op = MultOperator::SLASH;
+                break;
+        }
         advance();
 
         std::unique_ptr<TermNode> rightTerm = parseTerm();
@@ -639,14 +669,20 @@ std::unique_ptr<MultExpressionNode> Parser::parseMultExpression()
     return multExpression;
 }
 
-// term			=	[‘!’], (field_or_fun_call | ‘(’, expression, ‘)’ | literal);
+// term			=	[(‘!’ | ‘-’)], (field_or_fun_call | ‘(’, expression, ‘)’ | literal);
 std::unique_ptr<TermNode> Parser::parseTerm()
 {
-    bool isPositive = true;
+    NegationType negationType = NegationType::NONE;
 
     if (currentToken.type == T_NOT)
     {
-        isPositive = false;
+        negationType = NegationType::LOGICAL;
+        advance();
+    }
+
+    else if (currentToken.type == T_MINUS)
+    {
+        negationType = NegationType::ARITHMETICAL;
         advance();
     }
 
@@ -669,14 +705,14 @@ std::unique_ptr<TermNode> Parser::parseTerm()
     }
     else
     {
-        if (!isPositive)
+        if (negationType != NegationType::NONE)
         {
             throw ParserException("missing term after negation", currentToken.position, tokenTypeToString(currentToken.type));
         }
         return nullptr;
     }
 
-    return std::make_unique<TermNode>(isPositive, std::move(content));
+    return std::make_unique<TermNode>(negationType, std::move(content));
 }
 
 
@@ -809,8 +845,7 @@ std::unique_ptr<StructFieldNode> Parser::parseStructField()
         advance();
     }
 
-    if (currentToken.type == T_INT || currentToken.type == T_FLOAT || 
-        currentToken.type == T_STRING || currentToken.type == T_BOOL)
+    if (parseType())
     {
         std::string type = tokenTypeToString(currentToken.type);
         advance();
@@ -878,8 +913,7 @@ std::unique_ptr<VariantNode> Parser::parseVariant()
     {
         advance();
 
-        if (currentToken.type == T_INT || currentToken.type == T_FLOAT || 
-            currentToken.type == T_STRING || currentToken.type == T_BOOL)
+        if (parseType())
         {
             variant->addType(tokenTypeToString(currentToken.type));
             advance();
@@ -918,8 +952,7 @@ std::unique_ptr<MatchCaseNode> Parser::parseMatchCase()
     
     std::variant<std::string, std::unique_ptr<VariantNode>> type;
 
-    if (currentToken.type == T_INT || currentToken.type == T_FLOAT || 
-        currentToken.type == T_STRING || currentToken.type == T_BOOL)
+    if (parseType())
     {
         type = tokenTypeToString(currentToken.type);
         advance();
@@ -967,37 +1000,41 @@ std::unique_ptr<LiteralNode> Parser::parseLiteral()
     {
         case T_TRUE:
         {
-            bool value = true;
             advance();
-            return std::make_unique<LiteralNode>(value);
+            return std::make_unique<BoolLiteralNode>(true);
         }
         case T_FALSE:
         {
-            bool value = false;
             advance();
-            return std::make_unique<LiteralNode>(value);
+            return std::make_unique<BoolLiteralNode>(false);
         }
         case T_INT_VALUE:
         {
             int value = std::get<int>(currentToken.value);
             advance();
-            return std::make_unique<LiteralNode>(value);
+            return std::make_unique<IntLiteralNode>(value);
         }
         case T_FLOAT_VALUE:
         {
             float value = std::get<float>(currentToken.value);
             advance();
-            return std::make_unique<LiteralNode>(value);
+            return std::make_unique<FloatLiteralNode>(value);
         }
         case T_STRING_VALUE:
         {
             std::string value = std::get<std::string>(currentToken.value);
             advance();
-            return std::make_unique<LiteralNode>(value);
+            return std::make_unique<StringLiteralNode>(value);
         }
         default:
         {
             return nullptr;
         }
     }
+}
+
+bool Parser::parseType()
+{
+    return (currentToken.type == T_INT || currentToken.type == T_FLOAT || 
+        currentToken.type == T_STRING || currentToken.type == T_BOOL);
 }

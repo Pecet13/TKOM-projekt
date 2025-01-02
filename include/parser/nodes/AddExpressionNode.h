@@ -7,17 +7,23 @@
 #include <vector>
 #include <memory>
 
+enum class AddOperator
+{
+    PLUS,
+    MINUS
+};
+
 class AddExpressionNode : public Node
 {
 private:
     std::unique_ptr<MultExpressionNode> left;
-    std::vector<std::pair<std::string, std::unique_ptr<MultExpressionNode>>> rights;
+    std::vector<std::pair<AddOperator, std::unique_ptr<MultExpressionNode>>> rights;
 
 public:
     AddExpressionNode(std::unique_ptr<MultExpressionNode> left)
         : left(std::move(left)) {}
 
-    void addRight(const std::string& op, std::unique_ptr<MultExpressionNode> right)
+    void addRight(AddOperator op, std::unique_ptr<MultExpressionNode> right)
     {
         rights.emplace_back(op, std::move(right));
     }
@@ -29,7 +35,21 @@ public:
         result += left->toString(indentLevel + 1);
         for (const auto& pair : rights)
         {
-            result += indent + "-operator: " + pair.first + "\n" + pair.second->toString(indentLevel + 1);
+            result += indent + "-operator: ";
+            AddOperator op = pair.first;
+            switch (op)
+            {
+                case AddOperator::PLUS:
+                    result += "+";
+                    break;
+                case AddOperator::MINUS:
+                    result += "-";
+                    break;
+                default:
+                    result += "unknown";
+                    break;
+            } 
+            result += "\n" + pair.second->toString(indentLevel + 1);
         }
         return result;
     }

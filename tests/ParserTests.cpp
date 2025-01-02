@@ -32,7 +32,7 @@ TEST(ParserTests, VariableDeclarationInt)
                            "-----AddExpression\n"
                            "------MultExpression\n"
                            "-------Term\n"
-                           "--------Literal(int: 5)\n";
+                           "--------IntLiteral(value: 5)\n";
     
     EXPECT_EQ(program->toString(), expected);
 }
@@ -53,7 +53,7 @@ TEST(ParserTests, VariableDeclarationBool)
                            "-----AddExpression\n"
                            "------MultExpression\n"
                            "-------Term\n"
-                           "--------Literal(bool: true)\n";
+                           "--------BoolLiteral(value: true)\n";
     
     EXPECT_EQ(program->toString(), expected);
 }
@@ -74,7 +74,7 @@ TEST(ParserTests, VariableDeclarationString)
                            "-----AddExpression\n"
                            "------MultExpression\n"
                            "-------Term\n"
-                           "--------Literal(string: \"hello\")\n";
+                           "--------StringLiteral(value: \"hello\")\n";
     
     EXPECT_EQ(program->toString(), expected);
 }
@@ -204,7 +204,7 @@ TEST(ParserTests, FunctionDeclaration)
                            "-------AddExpression\n"
                            "--------MultExpression\n"
                            "---------Term\n"
-                           "----------Literal(int: 0)\n"
+                           "----------IntLiteral(value: 0)\n"
                            "----Block\n"
                            "-----ReturnStatement\n"
                            "------Expression\n"
@@ -213,7 +213,7 @@ TEST(ParserTests, FunctionDeclaration)
                            "---------AddExpression\n"
                            "----------MultExpression\n"
                            "-----------Term\n"
-                           "------------Literal(int: 1)\n"
+                           "------------IntLiteral(value: 1)\n"
                            "---Else\n"
                            "----Block\n"
                            "-----ReturnStatement\n"
@@ -238,7 +238,7 @@ TEST(ParserTests, FunctionDeclaration)
                            "------------------operator: -\n"
                            "------------------MultExpression\n"
                            "-------------------Term\n"
-                           "--------------------Literal(int: 1)\n";
+                           "--------------------IntLiteral(value: 1)\n";
 
     EXPECT_EQ(program->toString(), expected);
 }
@@ -301,7 +301,7 @@ TEST(ParserTests, Match)
                            "-------AddExpression\n"
                            "--------MultExpression\n"
                            "---------Term\n"
-                           "----------Literal(string: \"hello\")\n"
+                           "----------StringLiteral(value: \"hello\")\n"
                            "---MatchStatement\n"
                            "----Expression\n"
                            "-----AndExpression\n"
@@ -321,7 +321,7 @@ TEST(ParserTests, Match)
                            "------------AddExpression\n"
                            "-------------MultExpression\n"
                            "--------------Term\n"
-                           "---------------Literal(string: \"Wartosc typu int: \n\")\n"
+                           "---------------StringLiteral(value: \"Wartosc typu int: \n\")\n"
                            "------Assignment\n"
                            "-------FieldOrFunCall(identifier: print)\n"
                            "--------ArgumentList\n"
@@ -343,7 +343,7 @@ TEST(ParserTests, Match)
                            "------------AddExpression\n"
                            "-------------MultExpression\n"
                            "--------------Term\n"
-                           "---------------Literal(string: \"Wartosc typu string: \n\")\n"
+                           "---------------StringLiteral(value: \"Wartosc typu string: \n\")\n"
                            "------Assignment\n"
                            "-------FieldOrFunCall(identifier: print)\n"
                            "--------ArgumentList\n"
@@ -365,7 +365,7 @@ TEST(ParserTests, Match)
                            "------------AddExpression\n"
                            "-------------MultExpression\n"
                            "--------------Term\n"
-                           "---------------Literal(string: \"Wartosc innego typu\")\n"
+                           "---------------StringLiteral(value: \"Wartosc innego typu\")\n"
                            "---ReturnStatement\n"
                            "----Expression\n"
                            "-----AndExpression\n"
@@ -373,7 +373,7 @@ TEST(ParserTests, Match)
                            "-------AddExpression\n"
                            "--------MultExpression\n"
                            "---------Term\n"
-                           "----------Literal(int: 0)\n";
+                           "----------IntLiteral(value: 0)\n";
 
     EXPECT_EQ(program->toString(), expected);
 }
@@ -412,14 +412,14 @@ TEST(ParserTests, ComplexProgram)
                            "--------AddExpression\n"
                            "---------MultExpression\n"
                            "----------Term\n"
-                           "-----------Literal(string: \"bread\")\n"
+                           "-----------StringLiteral(value: \"bread\")\n"
                            "-----Expression\n"
                            "------AndExpression\n"
                            "-------Comparison\n"
                            "--------AddExpression\n"
                            "---------MultExpression\n"
                            "----------Term\n"
-                           "-----------Literal(float: 3.450000)\n"
+                           "-----------FloatLiteral(value: 3.450000)\n"
                            "---Assignment\n"
                            "----FieldOrFunCall(identifier: my_item)\n"
                            "-----(identifier: value)\n"
@@ -429,7 +429,7 @@ TEST(ParserTests, ComplexProgram)
                            "-------AddExpression\n"
                            "--------MultExpression\n"
                            "---------Term\n"
-                           "----------Literal(float: 4.560000)\n"
+                           "----------FloatLiteral(value: 4.560000)\n"
                            "---VariableDeclaration(type: int, identifier: a)\n"
                            "----Expression\n"
                            "-----AndExpression\n"
@@ -437,7 +437,7 @@ TEST(ParserTests, ComplexProgram)
                            "-------AddExpression\n"
                            "--------MultExpression\n"
                            "---------Term\n"
-                           "----------Literal(int: 10)\n"
+                           "----------IntLiteral(value: 10)\n"
                            "---VariableDeclaration(mut, type: int, identifier: b)\n"
                            "----Expression\n"
                            "-----AndExpression\n"
@@ -445,7 +445,7 @@ TEST(ParserTests, ComplexProgram)
                            "-------AddExpression\n"
                            "--------MultExpression\n"
                            "---------Term\n"
-                           "----------Literal(int: 1)\n"
+                           "----------IntLiteral(value: 1)\n"
                            "---Assignment\n"
                            "----FieldOrFunCall(identifier: b)\n"
                            "----Expression\n"
@@ -462,7 +462,7 @@ TEST(ParserTests, ComplexProgram)
                            "---------------AddExpression\n"
                            "----------------MultExpression\n"
                            "-----------------Term\n"
-                           "------------------Literal(int: 3)\n"
+                           "------------------IntLiteral(value: 3)\n"
                            "---WhileStatement\n"
                            "----Expression\n"
                            "-----AndExpression\n"
@@ -499,7 +499,7 @@ TEST(ParserTests, ComplexProgram)
                            "----------operator: +\n"
                            "----------MultExpression\n"
                            "-----------Term\n"
-                           "------------Literal(int: 1)\n"
+                           "------------IntLiteral(value: 1)\n"
                            "---ReturnStatement\n"
                            "----Expression\n"
                            "-----AndExpression\n"
@@ -507,7 +507,7 @@ TEST(ParserTests, ComplexProgram)
                            "-------AddExpression\n"
                            "--------MultExpression\n"
                            "---------Term\n"
-                           "----------Literal(int: 0)\n";
+                           "----------IntLiteral(value: 0)\n";
                            
     EXPECT_EQ(program->toString(), expected);
 }

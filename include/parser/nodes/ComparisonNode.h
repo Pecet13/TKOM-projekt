@@ -6,15 +6,26 @@
 #include <vector>
 #include <memory>
 
+enum class ComparisonOperator
+{
+    NONE,
+    EQUAL,
+    NOT_EQUAL,
+    GREATER,
+    GREATER_EQUAL,
+    LESS,
+    LESS_EQUAL
+};
+
 class ComparisonNode : public Node
 {
 private:
     std::unique_ptr<AddExpressionNode> left;
-    std::string op;
+    ComparisonOperator op;
     std::unique_ptr<AddExpressionNode> right;
 
 public:
-    ComparisonNode(std::unique_ptr<AddExpressionNode> left, const std::string& op = "",
+    ComparisonNode(std::unique_ptr<AddExpressionNode> left, ComparisonOperator op = ComparisonOperator::NONE,
                     std::unique_ptr<AddExpressionNode> right = nullptr)
         : left(std::move(left)), op(op), right(std::move(right)) {}
 
@@ -25,7 +36,35 @@ public:
         result += left->toString(indentLevel + 1);
         if (right)
         {
-            result += indent + "-operator: " + op + "\n" + right->toString(indentLevel + 1);
+            result += indent + "-operator: ";
+            switch (op)
+            {
+                case ComparisonOperator::NONE: 
+                    result += "none";
+                    break;
+                case ComparisonOperator::EQUAL:
+                    result += "==";
+                    break;
+                case ComparisonOperator::NOT_EQUAL:
+                    result += "!=";
+                    break;
+                case ComparisonOperator::GREATER:
+                    result += ">";
+                    break;
+                case ComparisonOperator::GREATER_EQUAL:
+                    result += ">=";
+                    break;
+                case ComparisonOperator::LESS:
+                    result += "<";
+                    break;
+                case ComparisonOperator::LESS_EQUAL:
+                    result += "<=";
+                    break;
+                default:
+                    result += "unknown";
+                    break;
+            }
+            result += "\n" + right->toString(indentLevel + 1);
         }
         return result;
     }
