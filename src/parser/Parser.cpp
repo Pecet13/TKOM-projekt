@@ -479,8 +479,6 @@ std::unique_ptr<ParameterNode> Parser::parseParameter()
     }
     if (auto variant = parseVariant())
     {
-        advance();
-
         must_be(T_ID, "missing identifier");
         std::string identifier = std::get<std::string>(currentToken.value);
         advance();
@@ -748,6 +746,7 @@ std::unique_ptr<FieldOrFunCallNode> Parser::parseFieldOrFunCall()
 
         while (currentToken.type == T_DOT)
         {
+            advance();
             must_be(T_ID, "missing identifier");
             additionalIdentifiers.push_back(std::get<std::string>(currentToken.value));
             advance();
@@ -834,7 +833,7 @@ std::unique_ptr<StructFieldListNode> Parser::parseStructFieldList()
 
 // struct_field		=	[‘mut’], type, identifier, ‘;’
 //                  |	identifier, identifier, ‘;’
-//                  |	variant_declaration, ‘;’;
+//                  |	variant_declaration;
 std::unique_ptr<StructFieldNode> Parser::parseStructField()
 {
     bool isMutable = false;
@@ -886,9 +885,6 @@ std::unique_ptr<StructFieldNode> Parser::parseStructField()
         {
             throw ParserException("\"mut\" is not valid for this type of struct field", currentToken.position, tokenTypeToString(currentToken.type));
         }
-
-        must_be(T_SEMICOLON, "missing semicolon");
-        advance();
 
         return std::make_unique<StructFieldNode>(std::move(variantDeclaration));
     }

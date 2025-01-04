@@ -24,7 +24,7 @@ public:
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
-        std::string result = indent + "Term\n";
+        std::string result = indent + "Term";
         if (negationType == NegationType::LOGICAL)
         {
             result += "(negation: logical)"; 
@@ -33,7 +33,7 @@ public:
         {
             result += "(negation: arithmetical)"; 
         }
-        return result + content->toString(indentLevel + 1);
+        return result + "\n" + content->toString(indentLevel + 1);
     }
 };
 
