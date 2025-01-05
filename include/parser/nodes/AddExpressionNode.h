@@ -1,7 +1,6 @@
 #ifndef ADD_EXPRESSION_NODE_H
 #define ADD_EXPRESSION_NODE_H
 
-#include "Node.h"
 #include "MultExpressionNode.h"
 #include <string>
 #include <vector>
@@ -52,6 +51,11 @@ public:
             result += "\n" + pair.second->toString(indentLevel + 1);
         }
         return result;
+    }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
     }
 };
 

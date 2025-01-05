@@ -35,6 +35,11 @@ public:
         }
         return result + "\n" + content->toString(indentLevel + 1);
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 #endif

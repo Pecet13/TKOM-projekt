@@ -23,6 +23,11 @@ public:
         return indent + "StructCreation(type: " + type + ", identifier: " + identifier + ")\n" +
                 arguments->toString(indentLevel + 1);
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 #endif

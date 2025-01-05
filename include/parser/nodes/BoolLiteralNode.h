@@ -17,6 +17,11 @@ public:
         std::string indent(indentLevel, '-');
         return indent + "BoolLiteral(value: " + std::string(value ? "true" : "false") + ")\n";
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 #endif

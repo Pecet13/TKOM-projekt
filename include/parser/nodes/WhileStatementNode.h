@@ -23,6 +23,11 @@ public:
                condition->toString(indentLevel + 1) +
                block->toString(indentLevel + 1);
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 #endif
