@@ -21,6 +21,7 @@ target_include_directories(Lexer PUBLIC include)
 
 add_library(Parser
     include/parser/Parser.h
+    include/parser/ParserException.h
     include/parser/nodes/Node.h
     src/parser/Parser.cpp
 )
@@ -32,6 +33,9 @@ target_link_libraries(Parser PUBLIC Lexer)
 
 add_library(Interpreter
     include/interpreter/NodeVisitor.h
+    include/interpreter/Interpreter.h
+    include/interpreter/InterpreterException.h
+    src/interpreter/Interpreter.cpp
 )
 target_include_directories(Interpreter PUBLIC include)
 

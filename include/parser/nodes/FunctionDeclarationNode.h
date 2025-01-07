@@ -33,6 +33,26 @@ public:
     {
         visitor.visit(*this);
     }
+
+    std::string getType() const
+    {
+        return type;
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
+
+    const ParameterListNode* getPararmeters() const
+    {
+        return parameters.get();
+    }
+
+    const BlockNode* getBlock() const
+    {
+        return block.get();
+    }
 };
 
 #endif
