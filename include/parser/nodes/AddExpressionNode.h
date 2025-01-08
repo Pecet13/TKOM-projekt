@@ -57,6 +57,16 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const MultExpressionNode* getLeft() const
+    {
+        return left.get();
+    }
+
+    const std::vector<std::pair<AddOperator, std::unique_ptr<MultExpressionNode>>>& getRights() const
+    {
+        return rights;
+    }
 };
 
 #endif

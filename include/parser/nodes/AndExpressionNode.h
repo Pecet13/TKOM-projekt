@@ -36,6 +36,16 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const ComparisonNode* getLeft() const
+    {
+        return left.get();
+    }
+
+    const std::vector<std::unique_ptr<ComparisonNode>>& getRights() const
+    {
+        return rights;
+    }
 };
 
 #endif

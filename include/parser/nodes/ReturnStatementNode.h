@@ -29,6 +29,11 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const ExpressionNode* getExpression() const
+    {
+        return expression.get();
+    }
 };
 
 #endif

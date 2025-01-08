@@ -38,6 +38,16 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const ExpressionNode* getExpression() const
+    {
+        return expression.get();
+    }
+
+    const std::vector<std::unique_ptr<MatchCaseNode>>& getCases() const
+    {
+        return cases;
+    }
 };
 
 #endif

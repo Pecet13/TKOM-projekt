@@ -22,6 +22,11 @@ public:
     {
         visitor.visit(*this);
     }
+
+    int getValue() const
+    {
+        return value;
+    }
 };
 
 #endif

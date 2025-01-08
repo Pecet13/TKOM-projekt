@@ -37,6 +37,16 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const std::variant<std::string, std::unique_ptr<VariantNode>>& getType() const
+    {
+        return type;
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
 };
 
 #endif

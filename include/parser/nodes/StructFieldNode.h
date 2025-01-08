@@ -39,6 +39,16 @@ public:
     {
         visitor.visit(*this);
     }
+
+    bool getMutable() const
+    {
+        return isMutable;
+    }
+
+    const std::variant<std::pair<std::string, std::string>, std::unique_ptr<VariantDeclarationNode>>& getContent() const
+    {
+        return content;
+    }
 };
 
 #endif

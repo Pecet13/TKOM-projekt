@@ -28,6 +28,16 @@ public:
     {
         visitor.visit(*this);
     }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
+
+    const StructFieldListNode* getFields() const
+    {
+        return fields.get();
+    }
 };
 
 #endif

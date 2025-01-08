@@ -28,6 +28,21 @@ public:
     {
         visitor.visit(*this);
     }
+
+    std::string getType() const
+    {
+        return type;
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
+
+    const ArgumentListNode* getArguments() const
+    {
+        return arguments.get();
+    }
 };
 
 #endif

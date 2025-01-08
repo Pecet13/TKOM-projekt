@@ -39,9 +39,8 @@ class Interpreter : public NodeVisitor
 {
 private:
     std::unordered_map<std::string, const FunctionDeclarationNode*> functions;
-    std::unordered_map<std::string, std::variant<int, float, std::string, bool>> globalVariables;
-    std::unordered_map<std::string, std::variant<int, float, std::string, bool>> localVariables;
-    // ...
+    std::unordered_map<std::string, std::variant<int, float, std::string, bool>> variables;
+    std::unordered_map<std::string, std::unordered_map<std::string, std::variant<int, float, std::string, bool>>> localVariables;
 
 public:
     void visit(const ProgramNode& node) override;

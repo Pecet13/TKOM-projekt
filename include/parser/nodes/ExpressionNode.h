@@ -36,6 +36,16 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const AndExpressionNode* getLeft() const
+    {
+        return left.get();
+    }
+
+    const std::vector<std::unique_ptr<AndExpressionNode>>& getRights() const
+    {
+        return rights;
+    }
 };
 
 #endif

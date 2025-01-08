@@ -28,6 +28,16 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const VariantNode* getVariant() const
+    {
+        return variant.get();
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
 };
 
 #endif

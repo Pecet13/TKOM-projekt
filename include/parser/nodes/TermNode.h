@@ -14,22 +14,22 @@ enum class NegationType
 class TermNode : public Node
 {
 private:
-    NegationType negationType;
+    NegationType negation;
     std::unique_ptr<Node> content;
 
 public:
     TermNode(NegationType negationType, std::unique_ptr<Node> content)
-        : negationType(negationType), content(std::move(content)) {}
+        : negation(negationType), content(std::move(content)) {}
 
     std::string toString(int indentLevel = 0) const override
     {
         std::string indent(indentLevel, '-');
         std::string result = indent + "Term";
-        if (negationType == NegationType::LOGICAL)
+        if (negation == NegationType::LOGICAL)
         {
             result += "(negation: logical)"; 
         }
-        else if (negationType == NegationType::ARITHMETICAL)
+        else if (negation == NegationType::ARITHMETICAL)
         {
             result += "(negation: arithmetical)"; 
         }
@@ -39,6 +39,16 @@ public:
     void accept(NodeVisitor& visitor) const override
     {
         visitor.visit(*this);
+    }
+
+    NegationType getNegation() const
+    {
+        return negation;
+    }
+
+    const Node* getContent() const
+    {
+        return content.get();
     }
 };
 

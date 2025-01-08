@@ -31,6 +31,11 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const std::vector<std::unique_ptr<ExpressionNode>>& getArguments() const
+    {
+        return arguments;
+    }
 };
 
 #endif

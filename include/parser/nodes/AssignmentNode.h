@@ -32,6 +32,16 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const FieldOrFunCallNode* getFieldOrFunCall() const
+    {
+        return fieldOrFunCall.get();
+    }
+
+    const ExpressionNode* getExpression() const
+    {
+        return expression.get();
+    }
 };
 
 #endif

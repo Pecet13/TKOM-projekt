@@ -57,6 +57,16 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const TermNode* getLeft() const
+    {
+        return left.get();
+    }
+
+    const std::vector<std::pair<MultOperator, std::unique_ptr<TermNode>>>& getRights() const
+    {
+        return rights;
+    }
 };
 
 #endif

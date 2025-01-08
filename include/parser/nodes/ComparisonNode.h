@@ -73,6 +73,21 @@ public:
     {
         visitor.visit(*this);
     }
+
+    const AddExpressionNode* getLeft() const
+    {
+        return left.get();
+    }
+
+    ComparisonOperator getOp() const
+    {
+        return op;
+    }
+
+    const AddExpressionNode* getRight() const
+    {
+        return right.get();
+    }
 };
 
 #endif

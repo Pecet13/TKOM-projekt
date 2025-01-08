@@ -23,6 +23,11 @@ public:
     {
         visitor.visit(*this);
     }
+
+    std::string getValue() const
+    {
+        return value;
+    }
 };
 
 #endif
