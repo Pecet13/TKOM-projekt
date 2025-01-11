@@ -1,5 +1,147 @@
 #include "interpreter/Interpreter.h"
 
+Scope& Interpreter::currentScope()
+{
+    return scopes.back();
+}
+
+void Interpreter::enterScope()
+{
+    scopes.emplace_back();
+}
+
+void Interpreter::exitScope()
+{
+    if (scopes.size() <= 1)
+    {
+        throw InterpreterException("Cannot exit global scope");
+    }
+    scopes.pop_back();
+}
+
+std::variant<int, float, std::string, bool> Interpreter::castValueType(const std::variant<int, float, std::string, bool>& value, const std::string& targetType)
+{
+    if (targetType == "int")
+    {
+        if (std::holds_alternative<float>(value))
+        {
+            return static_cast<int>(std::get<float>(value));
+        }
+        if (std::holds_alternative<bool>(value))
+        {
+            return std::get<bool>(value) ? 1 : 0;
+        }
+        if (std::holds_alternative<std::string>(value))
+        {
+            try
+            {
+                return std::stoi(std::get<std::string>(value));
+            }
+            catch (const std::invalid_argument& e)
+            {
+                throw InterpreterException("Cannot convert to integer (invalid argument): " + std::get<std::string>(value));
+            }
+            catch (const std::out_of_range& e)
+            {
+                throw InterpreterException("Cannot convert to integer (overflow): " + std::get<std::string>(value));
+            }
+        }
+    }
+    if (targetType == "float")
+    {
+        if (std::holds_alternative<int>(value))
+        {
+            return static_cast<float>(std::get<int>(value));
+        }
+        if (std::holds_alternative<bool>(value))
+        {
+            return std::get<bool>(value) ? 1.0f : 0.0f;
+        }
+        if (std::holds_alternative<std::string>(value))
+        {
+            try
+            {
+                return std::stof(std::get<std::string>(value));
+            }
+            catch (const std::invalid_argument& e)
+            {
+                throw InterpreterException("Cannot convert to float (invalid argument): " + std::get<std::string>(value));
+            }
+            catch (const std::out_of_range& e)
+            {
+                throw InterpreterException("Cannot convert to float (overflow): " + std::get<std::string>(value));
+            }
+        }
+    }
+    if (targetType == "string")
+    {
+        if (std::holds_alternative<int>(value))
+        {
+            return std::to_string(std::get<int>(value));
+        }
+        if (std::holds_alternative<float>(value))
+        {
+            return std::to_string(std::get<float>(value));
+        }
+        if (std::holds_alternative<bool>(value))
+        {
+            return std::get<bool>(value) ? "true" : "false";
+        }
+    }
+    if (targetType == "bool")
+    {
+        if (std::holds_alternative<int>(value))
+        {
+            return std::get<int>(value) != 0;
+        }
+        if (std::holds_alternative<float>(value))
+        {
+            return std::get<float>(value) != 0.0f;
+        }
+        if (std::holds_alternative<std::string>(value))
+        {
+            return (std::get<std::string>(value) != "false" 
+                    && std::get<std::string>(value) != "0"
+                    && std::get<std::string>(value) != "");
+        }
+    }
+
+    return value;
+}
+
+Variable& Interpreter::getVariable(const std::string& identifier)
+{
+    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it)
+    {
+        if (it->variables.find(identifier) != it->variables.end())
+        {
+            return it->variables.at(identifier);
+        }
+    }
+    throw InterpreterException("Variable not found: " + identifier);
+}
+
+void Interpreter::updateVariable(const std::string& identifier, const std::variant<int, float, std::string, bool>& newValue)
+{
+    Variable& variable = getVariable(identifier);
+    
+    if (!variable.isMutable)
+    {
+        throw InterpreterException("Cannot modify a const variable: " + identifier);
+    }
+
+    if (variable.value.index() != newValue.index())
+    {
+        throw InterpreterException("Incorrect value type for variable: " + identifier);
+    }
+    variable.value = newValue;
+}
+
+Interpreter::Interpreter()
+{
+    scopes.emplace_back();
+}
+
 void Interpreter::visit(const ProgramNode& node)
 {
     for (const auto& decl : node.getDeclarations())
@@ -15,28 +157,29 @@ void Interpreter::visit(const FunctionDeclarationNode& node)
         throw InterpreterException("Duplicate function declaration: " + node.getIdentifier());
     }
     functions[node.getIdentifier()] = &node;
-
-    std::string type = node.getType();
-
-    auto parameters = node.getPararmeters();
-    parameters->accept(*this);
-
-    auto block = node.getBlock();
-    block->accept(*this);
 }
 
 void Interpreter::visit(const VariableDeclarationNode& node)
 {
-    if (variables.find(node.getIdentifier()) != variables.end())
+    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it)
     {
-        throw InterpreterException("Duplicate variable declaration: " + node.getIdentifier());
+        if (it->variables.find(node.getIdentifier()) != it->variables.end())
+        {
+            throw InterpreterException("Duplicate variable declaration: " + node.getIdentifier());
+        }
+    }
+    std::variant<int, float, std::string, bool> value;
+
+    if (node.getExpression() != nullptr)
+    {
+        node.getExpression()->accept(*this);
+        value = valueStack.top();
+        valueStack.pop();
     }
 
-    bool isMutable = node.getMutable();
-    std::string type = node.getType();
+    value = castValueType(value, node.getType());
 
-    auto expression = node.getExpression();
-    expression->accept(*this);
+    currentScope().variables[node.getIdentifier()] = Variable{node.getMutable(), node.getType(), value};
 }
 
 void Interpreter::visit(const VariantDeclarationNode& node)
@@ -214,6 +357,9 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
     {
         auto arguments = std::get<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()).get();
         arguments->accept(*this);
+
+        auto block = functions[identifier]->getBlock();
+        block->accept(*this);
     }
 }
 
@@ -292,22 +438,22 @@ void Interpreter::visit(const MatchCaseNode& node)
     block->accept(*this);
 }
 
-void visit(const IntLiteralNode& node)
+void Interpreter::visit(const IntLiteralNode& node)
 {
-    int value = node.getValue();
+    valueStack.push(node.getValue());
 }
 
-void visit(const FloatLiteralNode& node)
+void Interpreter::visit(const FloatLiteralNode& node)
 {
-    float value = node.getValue();
+    valueStack.push(node.getValue());
 }
 
-void visit(const BoolLiteralNode& node)
+void Interpreter::visit(const BoolLiteralNode& node)
 {
-    bool value = node.getValue();
+    valueStack.push(node.getValue());
 }
 
-void visit(const StringLiteralNode& node)
+void Interpreter::visit(const StringLiteralNode& node)
 {
-    std::string value = node.getValue();
+    valueStack.push(node.getValue());
 }

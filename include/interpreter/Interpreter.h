@@ -34,15 +34,40 @@
 #include "../parser/nodes/VariantNode.h"
 #include "../parser/nodes/WhileStatementNode.h"
 #include <unordered_map>
+#include <stack>
+
+struct Variable
+{
+    bool isMutable;
+    std::string type;
+    std::variant<int, float, std::string, bool> value;
+};
+
+struct Scope
+{
+    std::unordered_map<std::string, Variable> variables;
+    std::unordered_map<std::string, const StructDeclarationNode*> structs;
+    std::unordered_map<std::string, const VariantDeclarationNode*> variants;
+    // maybe add struct instances?
+};
 
 class Interpreter : public NodeVisitor
 {
 private:
     std::unordered_map<std::string, const FunctionDeclarationNode*> functions;
-    std::unordered_map<std::string, std::variant<int, float, std::string, bool>> variables;
-    std::unordered_map<std::string, std::unordered_map<std::string, std::variant<int, float, std::string, bool>>> localVariables;
+    std::vector<Scope> scopes;
+    std::stack<std::variant<int, float, std::string, bool>> valueStack;
+
+    Scope& currentScope();
+    void enterScope();
+    void exitScope();
+    std::variant<int, float, std::string, bool> castValueType(const std::variant<int, float, std::string, bool>& value, const std::string& targetType);
+    Variable& getVariable(const std::string& identifier);
+    void updateVariable(const std::string& identifier, const std::variant<int, float, std::string, bool>& newValue);
 
 public:
+    Interpreter();
+
     void visit(const ProgramNode& node) override;
     void visit(const FunctionDeclarationNode& node) override;
     void visit(const VariableDeclarationNode& node) override;
