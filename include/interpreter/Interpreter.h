@@ -43,24 +43,63 @@ struct Variable
     std::variant<int, float, std::string, bool> value;
 };
 
+struct Function
+{
+    std::string type;
+    const ParameterListNode* parameters;
+    const BlockNode* block;
+};
+
+struct Field
+{
+    bool isMutable;
+    std::string type;
+};
+
+struct Structure
+{
+    std::unordered_map<std::string, Field> fields;
+};
+
+struct Variant
+{
+    std::vector<std::string> types;
+    std::variant<int, float, std::string, bool, std::unique_ptr<Variant>> value;
+};
+
+struct StructureInstance
+{
+    std::string type;
+    std::unordered_map<std::string, std::variant<int, float, std::string, bool, Variant, std::unique_ptr<StructureInstance>>> values;
+};
+
 struct Scope
 {
     std::unordered_map<std::string, Variable> variables;
-    std::unordered_map<std::string, const StructDeclarationNode*> structs;
-    std::unordered_map<std::string, const VariantDeclarationNode*> variants;
-    // maybe add struct instances?
+    std::unordered_map<std::string, Structure> structs;
+    std::unordered_map<std::string, StructureInstance> structInstances;
+    std::unordered_map<std::string, Variant> variants;
+};
+
+struct FunctionCallContext
+{
+    std::string identifier;
+    std::vector<Scope> scopes;
 };
 
 class Interpreter : public NodeVisitor
 {
 private:
-    std::unordered_map<std::string, const FunctionDeclarationNode*> functions;
-    std::vector<Scope> scopes;
+    std::unordered_map<std::string, Function> functions;
+    Scope globalScope;
+    std::stack<FunctionCallContext> callStack;
+    std::stack<std::string> typeStack;
     std::stack<std::variant<int, float, std::string, bool>> valueStack;
 
     Scope& currentScope();
     void enterScope();
     void exitScope();
+    void checkDuplicateId(const std::string& identifier);
     std::variant<int, float, std::string, bool> castValueType(const std::variant<int, float, std::string, bool>& value, const std::string& targetType);
     Variable& getVariable(const std::string& identifier);
     void updateVariable(const std::string& identifier, const std::variant<int, float, std::string, bool>& newValue);

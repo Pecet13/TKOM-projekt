@@ -2,21 +2,42 @@
 
 Scope& Interpreter::currentScope()
 {
-    return scopes.back();
+    if (!callStack.empty())
+    {
+        return callStack.top().scopes.back();
+    }
+    return globalScope;
 }
 
 void Interpreter::enterScope()
 {
-    scopes.emplace_back();
+    callStack.top().scopes.emplace_back();
 }
 
 void Interpreter::exitScope()
 {
-    if (scopes.size() <= 1)
+    callStack.top().scopes.pop_back();
+}
+
+void Interpreter::checkDuplicateId(const std::string& identifier)
+{
+    for (auto it = callStack.top().scopes.rbegin(); it != callStack.top().scopes.rend(); ++it)
     {
-        throw InterpreterException("Cannot exit global scope");
+        if (it->variables.find(identifier) != it->variables.end() ||
+            it->structs.find(identifier) != it->structs.end() ||
+            it->structInstances.find(identifier) != it->structInstances.end() ||
+            it->variants.find(identifier) != it->variants.end())
+        {
+            throw InterpreterException("Identifier already in use: " + identifier);
+        }
     }
-    scopes.pop_back();
+    if (globalScope.variables.find(identifier) != globalScope.variables.end() ||
+        globalScope.structs.find(identifier) != globalScope.structs.end() ||
+        globalScope.structInstances.find(identifier) != globalScope.structInstances.end() ||
+        globalScope.variants.find(identifier) != globalScope.variants.end())
+    {
+        throw InterpreterException("Identifier already in use: " + identifier);
+    }
 }
 
 std::variant<int, float, std::string, bool> Interpreter::castValueType(const std::variant<int, float, std::string, bool>& value, const std::string& targetType)
@@ -100,9 +121,9 @@ std::variant<int, float, std::string, bool> Interpreter::castValueType(const std
         }
         if (std::holds_alternative<std::string>(value))
         {
-            return (std::get<std::string>(value) != "false" 
-                    && std::get<std::string>(value) != "0"
-                    && std::get<std::string>(value) != "");
+            return (std::get<std::string>(value) != "false" &&
+                    std::get<std::string>(value) != "0" &&
+                    std::get<std::string>(value) != "");
         }
     }
 
@@ -111,12 +132,16 @@ std::variant<int, float, std::string, bool> Interpreter::castValueType(const std
 
 Variable& Interpreter::getVariable(const std::string& identifier)
 {
-    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it)
+    for (auto it = callStack.top().scopes.rbegin(); it != callStack.top().scopes.rend(); ++it)
     {
         if (it->variables.find(identifier) != it->variables.end())
         {
             return it->variables.at(identifier);
         }
+    }
+    if (globalScope.variables.find(identifier) != globalScope.variables.end())
+    {
+        return globalScope.variables.at(identifier);
     }
     throw InterpreterException("Variable not found: " + identifier);
 }
@@ -138,9 +163,7 @@ void Interpreter::updateVariable(const std::string& identifier, const std::varia
 }
 
 Interpreter::Interpreter()
-{
-    scopes.emplace_back();
-}
+{}
 
 void Interpreter::visit(const ProgramNode& node)
 {
@@ -156,18 +179,12 @@ void Interpreter::visit(const FunctionDeclarationNode& node)
     {
         throw InterpreterException("Duplicate function declaration: " + node.getIdentifier());
     }
-    functions[node.getIdentifier()] = &node;
+    functions[node.getIdentifier()] = Function{node.getType(), node.getPararmeters(), node.getBlock()};
 }
 
 void Interpreter::visit(const VariableDeclarationNode& node)
 {
-    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it)
-    {
-        if (it->variables.find(node.getIdentifier()) != it->variables.end())
-        {
-            throw InterpreterException("Duplicate variable declaration: " + node.getIdentifier());
-        }
-    }
+    checkDuplicateId(node.getIdentifier());
     std::variant<int, float, std::string, bool> value;
 
     if (node.getExpression() != nullptr)
@@ -184,15 +201,17 @@ void Interpreter::visit(const VariableDeclarationNode& node)
 
 void Interpreter::visit(const VariantDeclarationNode& node)
 {
+    checkDuplicateId(node.getIdentifier());
+
+    
     auto variant = node.getVariant();
     variant->accept(*this);
-
-    std::string identifier = node.getIdentifier();
 }
 
 void Interpreter::visit(const StructDeclarationNode& node)
 {
-    std::string identifier = node.getIdentifier();
+    checkDuplicateId(node.getIdentifier());
+
 
     auto fields = node.getFields();
     fields->accept(*this);
@@ -278,63 +297,307 @@ void Interpreter::visit(const ParameterNode& node)
 
 void Interpreter::visit(const ExpressionNode& node)
 {
-    auto left = node.getLeft();
-    left->accept(*this);
+    node.getLeft()->accept(*this);
+
+    auto a = valueStack.top();
+    valueStack.pop();
 
     for (const auto& right : node.getRights())
     {
+        if (std::get<bool>(castValueType(a, "bool")) == true)
+        {
+            break;
+        }
         right->accept(*this);
+
+        auto b = valueStack.top();
+        valueStack.pop();
+
+        a = std::get<bool>(castValueType(a, "bool")) || std::get<bool>(castValueType(b, "bool"));
     }
+    valueStack.push(a);
 }
 
 void Interpreter::visit(const AndExpressionNode& node)
 {
-    auto left = node.getLeft();
-    left->accept(*this);
+    node.getLeft()->accept(*this);
+
+    auto a = valueStack.top();
+    valueStack.pop();
 
     for (const auto& right : node.getRights())
     {
+        if (std::get<bool>(castValueType(a, "bool")) == false)
+        {
+            break;
+        }
         right->accept(*this);
+
+        auto b = valueStack.top();
+        valueStack.pop();
+
+        a = std::get<bool>(castValueType(a, "bool")) && std::get<bool>(castValueType(b, "bool"));
     }
+    valueStack.push(a);
 }
 
 void Interpreter::visit(const ComparisonNode& node)
 {
-    auto left = node.getLeft();
-    left->accept(*this);
+    node.getLeft()->accept(*this);
+
+    auto a = valueStack.top();
+    valueStack.pop();
 
     ComparisonOperator op = node.getOp();
 
-    auto right = node.getRight();
-    right->accept(*this);
+    if (op != ComparisonOperator::NONE)
+    {
+        node.getRight()->accept(*this);
+
+        auto b = valueStack.top();
+        valueStack.pop();
+
+        switch (op)
+        {
+            case ComparisonOperator::EQUAL:
+            {
+                if (std::holds_alternative<int>(a))
+                {
+                    a = std::get<int>(a) == std::get<int>(castValueType(b, "int"));
+                }
+                else if (std::holds_alternative<float>(a))
+                {
+                    a = std::get<float>(a) == std::get<float>(castValueType(b, "float"));
+                }
+                else if (std::holds_alternative<bool>(a))
+                {
+                    a = std::get<bool>(a) == std::get<bool>(castValueType(b, "bool"));
+                }
+                else if (std::holds_alternative<std::string>(a))
+                {
+                    a = std::get<std::string>(a) == std::get<std::string>(castValueType(b, "string"));
+                }
+                break;
+            }
+            case ComparisonOperator::NOT_EQUAL:
+            {
+                if (std::holds_alternative<int>(a))
+                {
+                    a = std::get<int>(a) != std::get<int>(castValueType(b, "int"));
+                }
+                else if (std::holds_alternative<float>(a))
+                {
+                    a = std::get<float>(a) != std::get<float>(castValueType(b, "float"));
+                }
+                else if (std::holds_alternative<bool>(a))
+                {
+                    a = std::get<bool>(a) != std::get<bool>(castValueType(b, "bool"));
+                }
+                else if (std::holds_alternative<std::string>(a))
+                {
+                    a = std::get<std::string>(a) != std::get<std::string>(castValueType(b, "string"));
+                }
+                break;
+            }
+            case ComparisonOperator::GREATER:
+            {
+                if (std::holds_alternative<int>(a))
+                {
+                    a = std::get<int>(a) > std::get<int>(castValueType(b, "int"));
+                }
+                else if (std::holds_alternative<float>(a))
+                {
+                    a = std::get<float>(a) > std::get<float>(castValueType(b, "float"));
+                }
+                else
+                {
+                    throw InterpreterException("Invalid types for operation: " + std::get<std::string>(castValueType(a, "string")) +
+                                                " > " + std::get<std::string>(castValueType(b, "string")));
+                }
+                break;
+            }
+            case ComparisonOperator::GREATER_EQUAL:
+            {
+                if (std::holds_alternative<int>(a))
+                {
+                    a = std::get<int>(a) >= std::get<int>(castValueType(b, "int"));
+                }
+                else if (std::holds_alternative<float>(a))
+                {
+                    a = std::get<float>(a) >= std::get<float>(castValueType(b, "float"));
+                }
+                else
+                {
+                    throw InterpreterException("Invalid types for operation: " + std::get<std::string>(castValueType(a, "string")) +
+                                                " >= " + std::get<std::string>(castValueType(b, "string")));
+                }
+                break;
+            }
+            case ComparisonOperator::LESS:
+            {
+                if (std::holds_alternative<int>(a))
+                {
+                    a = std::get<int>(a) < std::get<int>(castValueType(b, "int"));
+                }
+                else if (std::holds_alternative<float>(a))
+                {
+                    a = std::get<float>(a) < std::get<float>(castValueType(b, "float"));
+                }
+                else
+                {
+                    throw InterpreterException("Invalid types for operation: " + std::get<std::string>(castValueType(a, "string")) +
+                                                " < " + std::get<std::string>(castValueType(b, "string")));
+                }
+                break;
+            }
+            case ComparisonOperator::LESS_EQUAL:
+            {
+                if (std::holds_alternative<int>(a))
+                {
+                    a = std::get<int>(a) <= std::get<int>(castValueType(b, "int"));
+                }
+                else if (std::holds_alternative<float>(a))
+                {
+                    a = std::get<float>(a) <= std::get<float>(castValueType(b, "float"));
+                }
+                else
+                {
+                    throw InterpreterException("Invalid types for operation: " + std::get<std::string>(castValueType(a, "string")) +
+                                                " <= " + std::get<std::string>(castValueType(b, "string")));
+                }
+                break;
+            }
+        }
+    }
+    valueStack.push(a);
 }
 
 void Interpreter::visit(const AddExpressionNode& node)
 {
-    auto left = node.getLeft();
-    left->accept(*this);
+    node.getLeft()->accept(*this);
+
+    auto a = valueStack.top();
+    valueStack.pop();
 
     for (const auto& pair : node.getRights())
     {
         AddOperator op = pair.first;
 
-        auto right = pair.second.get();
-        right->accept(*this);
+        pair.second.get()->accept(*this);
+
+        auto b = valueStack.top();
+        valueStack.pop();
+
+        switch (op)
+        {
+            case AddOperator::PLUS:
+            {
+                if (std::holds_alternative<int>(a))
+                {
+                    a = std::get<int>(a) + std::get<int>(castValueType(b, "int"));
+                }
+                else if (std::holds_alternative<float>(a))
+                {
+                    a = std::get<float>(a) + std::get<float>(castValueType(b, "float"));
+                }
+                else if (std::holds_alternative<std::string>(a))
+                {
+                    a = std::get<std::string>(a) + std::get<std::string>(castValueType(b, "string"));
+                }
+                else
+                {
+                    throw InterpreterException("Invalid types for operation: " + std::get<std::string>(castValueType(a, "string")) +
+                                                " + " + std::get<std::string>(castValueType(b, "string")));
+                }
+                break;
+            }
+            case AddOperator::MINUS:
+            {
+                if (std::holds_alternative<int>(a))
+                {
+                    a = std::get<int>(a) - std::get<int>(castValueType(b, "int"));
+                }
+                else if (std::holds_alternative<float>(a))
+                {
+                    a = std::get<float>(a) - std::get<float>(castValueType(b, "float"));
+                }
+                else
+                {
+                    throw InterpreterException("Invalid types for operation: " + std::get<std::string>(castValueType(a, "string")) +
+                                                " - " + std::get<std::string>(castValueType(b, "string")));
+                }
+                break;
+            }
+        }
     }
+    valueStack.push(a);
 }
 
 void Interpreter::visit(const MultExpressionNode& node)
 {
-    auto left = node.getLeft();
-    left->accept(*this);
+    node.getLeft()->accept(*this);
+
+    auto a = valueStack.top();
+    valueStack.pop();
 
     for (const auto& pair : node.getRights())
     {
         MultOperator op = pair.first;
 
-        auto right = pair.second.get();
-        right->accept(*this);
+        pair.second.get()->accept(*this);
+
+        auto b = valueStack.top();
+        valueStack.pop();
+
+        switch (op)
+        {
+            case MultOperator::ASTERISK:
+            {
+                if (std::holds_alternative<int>(a) && std::holds_alternative<int>(b))
+                {
+                    a = std::get<int>(a) * std::get<int>(b);
+                }
+                else if (std::holds_alternative<float>(a) || std::holds_alternative<float>(b))
+                {
+                    a = std::get<float>(castValueType(a, "float")) * std::get<float>(castValueType(b, "float"));
+                }
+                else
+                {
+                    throw InterpreterException("Invalid types for operation: " + std::get<std::string>(castValueType(a, "string")) +
+                                                " * " + std::get<std::string>(castValueType(b, "string")));
+                }
+                break;
+            }
+            case MultOperator::SLASH:
+            {
+                if (std::holds_alternative<int>(a) && std::holds_alternative<int>(b))
+                {
+                    if (std::get<int>(b) == 0)
+                    {
+                        throw InterpreterException("Division by zero: " + std::get<std::string>(castValueType(a, "string")) +
+                                                    " / " + std::get<std::string>(castValueType(b, "string")));
+                    }
+                    a = std::get<int>(a) / std::get<int>(b);
+                }
+                else if (std::holds_alternative<float>(a) || std::holds_alternative<float>(b))
+                {
+                    if (std::get<float>(castValueType(b, "float")) == 0)
+                    {
+                        throw InterpreterException("Division by zero: " + std::get<std::string>(castValueType(a, "string")) +
+                                                    " / " + std::get<std::string>(castValueType(b, "string")));
+                    }
+                    a = std::get<float>(castValueType(a, "float")) / std::get<float>(castValueType(b, "float"));
+                }
+                else
+                {
+                    throw InterpreterException("Invalid types for operation: " + std::get<std::string>(castValueType(a, "string")) +
+                                                " / " + std::get<std::string>(castValueType(b, "string")));
+                }
+                break;
+            }
+        }
     }
+    valueStack.push(a);
 }
 
 void Interpreter::visit(const TermNode& node)
@@ -358,7 +621,7 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
         auto arguments = std::get<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()).get();
         arguments->accept(*this);
 
-        auto block = functions[identifier]->getBlock();
+        auto block = functions[identifier].block;
         block->accept(*this);
     }
 }
