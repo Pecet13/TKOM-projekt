@@ -19,16 +19,30 @@ void Interpreter::exitScope()
     callStack.top().scopes.pop_back();
 }
 
+void Interpreter::enterCallContext(const std::string& identifier)
+{
+    callStack.push(FunctionCallContext{identifier});
+    enterScope();
+}
+
+void Interpreter::exitCallContext()
+{
+    callStack.pop();
+}
+
 void Interpreter::checkDuplicateId(const std::string& identifier)
 {
-    for (auto it = callStack.top().scopes.rbegin(); it != callStack.top().scopes.rend(); ++it)
+    if (!callStack.empty())
     {
-        if (it->variables.find(identifier) != it->variables.end() ||
-            it->structs.find(identifier) != it->structs.end() ||
-            it->structInstances.find(identifier) != it->structInstances.end() ||
-            it->variants.find(identifier) != it->variants.end())
+        for (auto it = callStack.top().scopes.rbegin(); it != callStack.top().scopes.rend(); ++it)
         {
-            throw InterpreterException("Identifier already in use: " + identifier);
+            if (it->variables.find(identifier) != it->variables.end() ||
+                it->structs.find(identifier) != it->structs.end() ||
+                it->structInstances.find(identifier) != it->structInstances.end() ||
+                it->variants.find(identifier) != it->variants.end())
+            {
+                throw InterpreterException("Identifier already in use: " + identifier);
+            }
         }
     }
     if (globalScope.variables.find(identifier) != globalScope.variables.end() ||
@@ -146,20 +160,25 @@ Variable& Interpreter::getVariable(const std::string& identifier)
     throw InterpreterException("Variable not found: " + identifier);
 }
 
-void Interpreter::updateVariable(const std::string& identifier, const std::variant<int, float, std::string, bool>& newValue)
+std::string Interpreter::determineValueType(const std::variant<int, float, std::string, bool>& value)
 {
-    Variable& variable = getVariable(identifier);
-    
-    if (!variable.isMutable)
+    if (std::holds_alternative<int>(value))
     {
-        throw InterpreterException("Cannot modify a const variable: " + identifier);
+        return "int";
     }
-
-    if (variable.value.index() != newValue.index())
+    if (std::holds_alternative<float>(value))
     {
-        throw InterpreterException("Incorrect value type for variable: " + identifier);
+        return "float";
     }
-    variable.value = newValue;
+    if (std::holds_alternative<std::string>(value))
+    {
+        return "string";
+    }
+    if (std::holds_alternative<bool>(value))
+    {
+        return "bool";
+    }
+    throw InterpreterException("Invalid value type");
 }
 
 Interpreter::Interpreter()
@@ -171,6 +190,11 @@ void Interpreter::visit(const ProgramNode& node)
     {
         decl->accept(*this);
     }
+    if (functions.find("main") == functions.end())
+    {
+        throw InterpreterException("Missing main function");
+    }
+    functions["main"].block->accept(*this);
 }
 
 void Interpreter::visit(const FunctionDeclarationNode& node)
@@ -179,7 +203,24 @@ void Interpreter::visit(const FunctionDeclarationNode& node)
     {
         throw InterpreterException("Duplicate function declaration: " + node.getIdentifier());
     }
-    functions[node.getIdentifier()] = Function{node.getType(), node.getPararmeters(), node.getBlock()};
+
+    if (node.getIdentifier() == "main" &&  node.getType() != "int")
+    {
+        throw InterpreterException("main must return int");
+    }
+
+    node.getPararmeters()->accept(*this);
+
+    std::vector<std::pair<std::string, std::string>> parameters;
+
+    for (auto i = 0; i < parameterIdentifiers.size(); ++i)
+    {
+        parameters.push_back(std::make_pair(parameterTypes[i], parameterIdentifiers[i]));
+    }
+
+    functions[node.getIdentifier()] = Function{node.getType(), parameters, node.getBlock()};
+    parameterTypes.clear();
+    parameterIdentifiers.clear();
 }
 
 void Interpreter::visit(const VariableDeclarationNode& node)
@@ -236,29 +277,54 @@ void Interpreter::visit(const AssignmentNode& node)
 
 void Interpreter::visit(const IfStatementNode& node)
 {
-    auto condition = node.getCondition();
-    condition->accept(*this);
+    node.getCondition()->accept(*this);
 
-    auto block = node.getBlock();
-    block->accept(*this);
+    bool condition = std::get<bool>(castValueType(valueStack.top(), "bool"));
+    valueStack.pop();
 
-    auto elseBlock = node.getElseBlock();
-    elseBlock->accept(*this);
+    if (condition)
+    {
+        node.getBlock()->accept(*this);
+    }
+    else
+    {
+        node.getElseBlock()->accept(*this);
+    }
 }
 
 void Interpreter::visit(const WhileStatementNode& node)
 {
-    auto condition = node.getCondition();
-    condition->accept(*this);
+    node.getCondition()->accept(*this);
 
-    auto block = node.getBlock();
-    block->accept(*this);
+    bool condition = std::get<bool>(castValueType(valueStack.top(), "bool"));
+    valueStack.pop();
+
+    while (condition)
+    {
+        node.getBlock()->accept(*this);
+        node.getCondition()->accept(*this);
+
+        condition = std::get<bool>(castValueType(valueStack.top(), "bool"));
+        valueStack.pop();
+    }
 }
 
 void Interpreter::visit(const ReturnStatementNode& node)
 {
-    auto expression = node.getExpression();
-    expression->accept(*this);
+    std::string functionIdentifier = callStack.top().identifier;
+    if (functions[functionIdentifier].type == "void" && node.getExpression() != nullptr)
+    {
+        throw InterpreterException("Cannot return a value in void function");
+    }
+    
+    node.getExpression()->accept(*this);
+
+    auto value = valueStack.top();
+    valueStack.pop();
+    value = castValueType(value, functions[functionIdentifier].type);
+    valueStack.push(value);
+
+    exitCallContext();
 }
 
 void Interpreter::visit(const MatchStatementNode& node)
@@ -284,15 +350,15 @@ void Interpreter::visit(const ParameterNode& node)
 {
     if (std::holds_alternative<std::string>(node.getType()))
     {
-        std::string type = std::get<std::string>(node.getType());
+        parameterTypes.push_back(std::get<std::string>(node.getType()));
+        parameterIdentifiers.push_back(node.getIdentifier());
     }
     else if (std::holds_alternative<std::unique_ptr<VariantNode>>(node.getType()))
     {
-        auto type = std::get<std::unique_ptr<VariantNode>>(node.getType()).get();
-        type->accept(*this);
+        parameterTypes.push_back("");
+        parameterIdentifiers.push_back(node.getIdentifier());
+        std::get<std::unique_ptr<VariantNode>>(node.getType()).get()->accept(*this);
     }
-
-    std::string identifier = node.getIdentifier();
 }
 
 void Interpreter::visit(const ExpressionNode& node)
@@ -612,18 +678,101 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
 {
     std::string identifier = node.getIdentifier();
 
+    if (identifier == "print")
+    {
+        if (!std::holds_alternative<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()))
+        {
+            throw InterpreterException("Calling print requires an argument");
+        }
+
+        auto arguments = std::get<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()).get();
+        size_t stackSizeBefore = valueStack.size();
+        arguments->accept(*this);
+        size_t argumentCount = valueStack.size() - stackSizeBefore;
+
+        if (argumentCount != 1)
+        {
+            throw InterpreterException("Function " + identifier +
+                                        " requires 1 argument(s), but " + std::to_string(argumentCount) +
+                                        " were given");
+        }
+
+        auto value = valueStack.top();
+        valueStack.pop();
+
+        if (std::holds_alternative<int>(value))
+        {
+            std::cout << std::get<int>(value);
+        }
+        else if (std::holds_alternative<float>(value))
+        {
+            std::cout << std::get<float>(value);
+        }
+        else if (std::holds_alternative<std::string>(value))
+        {
+            std::cout << std::get<std::string>(value);
+        }
+        else if (std::holds_alternative<bool>(value))
+        {
+            std::cout << std::get<bool>(value);
+        }
+        return;
+    }
+
     if (std::holds_alternative<std::vector<std::string>>(node.getAdditionalContent()))
     {
         auto fields = std::get<std::vector<std::string>>(node.getAdditionalContent());
     }
     else if (std::holds_alternative<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()))
     {
-        auto arguments = std::get<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()).get();
-        arguments->accept(*this);
+        if (functions.find(identifier) == functions.end())
+        {
+            throw InterpreterException("Function not found: " + identifier);
+        }
 
-        auto block = functions[identifier].block;
-        block->accept(*this);
+        auto arguments = std::get<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()).get();
+        size_t stackSizeBefore = valueStack.size();
+        arguments->accept(*this);
+        size_t argumentCount = valueStack.size() - stackSizeBefore;
+
+        const Function& function = functions[identifier];
+
+        if (argumentCount != function.parameters.size())
+        {
+            throw InterpreterException("Function " + identifier +
+                                        " requires " + std::to_string(function.parameters.size()) +
+                                        " argument(s), but " + std::to_string(argumentCount) +
+                                        " were given");
+        }
+
+        enterCallContext(identifier);
+        for (auto i = function.parameters.size() - 1; i >= 0; --i)
+        {
+            const auto& param = function.parameters[i];
+            auto value = valueStack.top();
+            valueStack.pop();
+
+            if (param.first.find("variant") == 0)
+            {
+                std::string valueType = determineValueType(value);
+                if (param.first.find(valueType) == std::string::npos)
+                {
+                    throw InterpreterException("Type " + valueType + " is not allowed in " + param.first);
+                }
+            }
+            else
+            {
+                value = castValueType(value, param.first);
+            }
+            
+            currentScope().variables[param.second] = Variable{false, param.first, value};
+        }
+
+        function.block->accept(*this);
     }
+
+    Variable& variable = getVariable(identifier);
+    valueStack.push(variable.value);
 }
 
 void Interpreter::visit(const ArgumentListNode& node)
@@ -669,18 +818,19 @@ void Interpreter::visit(const StructFieldNode& node)
 
 void Interpreter::visit(const VariantNode& node)
 {
+    parameterTypes.back() += "variant<";
     for (const auto& type : node.getTypes())
     {
         if (std::holds_alternative<std::string>(type))
         {
-            std::string regularType = std::get<std::string>(type);
+            parameterTypes.back() += std::get<std::string>(type);
         }
         else if (std::holds_alternative<std::unique_ptr<VariantNode>>(type))
         {
-            auto variant = std::get<std::unique_ptr<VariantNode>>(type).get();
-            variant->accept(*this);
+            std::get<std::unique_ptr<VariantNode>>(type).get()->accept(*this);
         }
     }
+    parameterTypes.back() += ">";
 }
 
 void Interpreter::visit(const MatchCaseNode& node)

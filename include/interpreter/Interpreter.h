@@ -35,6 +35,7 @@
 #include "../parser/nodes/WhileStatementNode.h"
 #include <unordered_map>
 #include <stack>
+#include <iostream>
 
 struct Variable
 {
@@ -46,7 +47,7 @@ struct Variable
 struct Function
 {
     std::string type;
-    const ParameterListNode* parameters;
+    std::vector<std::pair<std::string, std::string>> parameters;
     const BlockNode* block;
 };
 
@@ -63,7 +64,7 @@ struct Structure
 
 struct Variant
 {
-    std::vector<std::string> types;
+    std::string type;
     std::variant<int, float, std::string, bool, std::unique_ptr<Variant>> value;
 };
 
@@ -93,16 +94,19 @@ private:
     std::unordered_map<std::string, Function> functions;
     Scope globalScope;
     std::stack<FunctionCallContext> callStack;
-    std::stack<std::string> typeStack;
+    std::vector<std::string> parameterTypes;
+    std::vector<std::string> parameterIdentifiers;
     std::stack<std::variant<int, float, std::string, bool>> valueStack;
 
     Scope& currentScope();
     void enterScope();
     void exitScope();
+    void enterCallContext(const std::string& identifier);
+    void exitCallContext();
     void checkDuplicateId(const std::string& identifier);
     std::variant<int, float, std::string, bool> castValueType(const std::variant<int, float, std::string, bool>& value, const std::string& targetType);
     Variable& getVariable(const std::string& identifier);
-    void updateVariable(const std::string& identifier, const std::variant<int, float, std::string, bool>& newValue);
+    std::string determineValueType(const std::variant<int, float, std::string, bool>& value);
 
 public:
     Interpreter();
