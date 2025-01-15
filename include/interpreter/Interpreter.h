@@ -37,12 +37,10 @@
 #include <stack>
 #include <iostream>
 
-struct Variable
-{
-    bool isMutable;
-    std::string type;
-    std::variant<int, float, std::string, bool> value;
-};
+struct Variant;
+struct StructureInstance;
+
+using Value = std::variant<int, float, std::string, bool, std::unique_ptr<Variant>, std::unique_ptr<StructureInstance>>;
 
 struct Function
 {
@@ -65,13 +63,23 @@ struct Structure
 struct Variant
 {
     std::string type;
-    std::variant<int, float, std::string, bool, std::unique_ptr<Variant>> value;
+    // std::vector<std::string> allowedTypes
+    // std::vector values
+    // size_t active_field
+    Value value;
 };
 
 struct StructureInstance
 {
     std::string type;
-    std::unordered_map<std::string, std::variant<int, float, std::string, bool, Variant, std::unique_ptr<StructureInstance>>> values;
+    std::unordered_map<std::string, Value> values;
+};
+
+struct Variable
+{
+    bool isMutable;
+    std::string type;
+    Value value;
 };
 
 struct Scope
@@ -96,7 +104,8 @@ private:
     std::stack<FunctionCallContext> callStack;
     std::vector<std::string> parameterTypes;
     std::vector<std::string> parameterIdentifiers;
-    std::stack<std::variant<int, float, std::string, bool>> valueStack;
+    std::unordered_map<std::string, Field> fieldBuffer;
+    std::stack<Value> valueStack;
 
     Scope& currentScope();
     void enterScope();
@@ -104,9 +113,12 @@ private:
     void enterCallContext(const std::string& identifier);
     void exitCallContext();
     void checkDuplicateId(const std::string& identifier);
-    std::variant<int, float, std::string, bool> castValueType(const std::variant<int, float, std::string, bool>& value, const std::string& targetType);
+    Value castValueType(const Value& value, const std::string& targetType);
     Variable& getVariable(const std::string& identifier);
-    std::string determineValueType(const std::variant<int, float, std::string, bool>& value);
+    Structure& getStructure(const std::string& identifier);
+    Variant& getVariant(const std::string& identifier);
+    StructureInstance& getStructureInstance(const std::string& identifier);
+    std::string determineValueType(const Value& value);
 
 public:
     Interpreter();
