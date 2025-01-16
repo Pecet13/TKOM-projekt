@@ -180,6 +180,16 @@ Value Interpreter::castValueType(const Value& value, const std::string& targetTy
     throw InterpreterException("Unsupported type for converting value: " + targetType);
 }
 
+Function& Interpreter::getFunction(const std::string& identifier)
+{
+    if (functions.find(identifier) == functions.end())
+    {
+        throw InterpreterException("Function not found: " + identifier);
+    }
+
+    return functions[identifier];
+}
+
 Variable& Interpreter::getVariable(const std::string& identifier)
 {
     for (auto it = callStack.top().scopes.rbegin(); it != callStack.top().scopes.rend(); ++it)
@@ -244,6 +254,19 @@ StructureInstance& Interpreter::getStructureInstance(const std::string& identifi
     throw InterpreterException("Struct instance not found: " + identifier);
 }
 
+std::string Interpreter::buildVariantType(const Variant& variant)
+{
+    std::string type = "variant[";
+    for (size_t i = 0; i < variant.allowedTypes.size(); ++i)
+    {
+        if (i > 0)
+            type += ", ";
+        type += variant.allowedTypes[i];
+    }
+    type += "]";
+    return type;
+}
+
 std::string Interpreter::determineValueType(const Value& value)
 {
     if (std::holds_alternative<int>(value))
@@ -264,7 +287,7 @@ std::string Interpreter::determineValueType(const Value& value)
     }
     if (std::holds_alternative<std::unique_ptr<Variant>>(value))
     {
-        return "variant";
+        return buildVariantType(*std::get<std::unique_ptr<Variant>>(value));
     }
     if (std::holds_alternative<std::unique_ptr<StructureInstance>>(value))
     {
@@ -338,8 +361,12 @@ void Interpreter::visit(const VariantDeclarationNode& node)
 
     node.getVariant()->accept(*this);
 
-    currentScope().variants[node.getIdentifier()] = Variant{parameterTypes.back()};
-    parameterTypes.pop_back();
+    size_t active_index = -1;
+    std::vector<Value> values;
+    values.resize(parameterTypes.size());
+
+    currentScope().variants[node.getIdentifier()] = Variant{parameterTypes, active_index, std::move(values)};
+    parameterTypes.clear();
 }
 
 void Interpreter::visit(const StructDeclarationNode& node)
@@ -356,7 +383,12 @@ void Interpreter::visit(const BlockNode& node)
 {
     for (const auto& stmt : node.getStatements())
     {
+        size_t callSizeBefore = callStack.size();
         stmt->accept(*this);
+        if (callStack.size() < callSizeBefore)
+        {
+            break;
+        }
     }
 }
 
@@ -367,7 +399,7 @@ void Interpreter::visit(const AssignmentNode& node)
     if (auto expression = node.getExpression())
     {
         expression->accept(*this);
-        // ...
+        // TODO implement further
     }
 }
 
@@ -378,6 +410,7 @@ void Interpreter::visit(const IfStatementNode& node)
     bool condition = std::get<bool>(castValueType(valueStack.top(), "bool"));
     valueStack.pop();
 
+    enterScope();
     if (condition)
     {
         node.getBlock()->accept(*this);
@@ -386,6 +419,7 @@ void Interpreter::visit(const IfStatementNode& node)
     {
         node.getElseBlock()->accept(*this);
     }
+    exitScope();
 }
 
 void Interpreter::visit(const WhileStatementNode& node)
@@ -397,7 +431,9 @@ void Interpreter::visit(const WhileStatementNode& node)
 
     while (condition)
     {
+        enterScope();
         node.getBlock()->accept(*this);
+        exitScope();
         node.getCondition()->accept(*this);
 
         condition = std::get<bool>(castValueType(valueStack.top(), "bool"));
@@ -427,6 +463,11 @@ void Interpreter::visit(const MatchStatementNode& node)
 {
     auto expression = node.getExpression();
     expression->accept(*this);
+
+    if (!std::holds_alternative<std::unique_ptr<Variant>>(valueStack.top()))
+    {
+        throw InterpreterException("Invalid type for match");
+    }
 
     for (const auto& matchCase : node.getCases())
     {
@@ -869,20 +910,16 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
     if (std::holds_alternative<std::vector<std::string>>(node.getAdditionalContent()))
     {
         auto fields = std::get<std::vector<std::string>>(node.getAdditionalContent());
+        // TODO implement further
     }
     else if (std::holds_alternative<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()))
     {
-        if (functions.find(identifier) == functions.end())
-        {
-            throw InterpreterException("Function not found: " + identifier);
-        }
-
         auto arguments = std::get<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()).get();
         size_t stackSizeBefore = valueStack.size();
         arguments->accept(*this);
         size_t argumentCount = valueStack.size() - stackSizeBefore;
 
-        const Function& function = functions[identifier];
+        const Function& function = getFunction(identifier);
 
         if (argumentCount != function.parameters.size())
         {
@@ -893,33 +930,47 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
         }
 
         enterCallContext(identifier);
-        for (auto i = function.parameters.size() - 1; i >= 0; --i)
+        for (auto i = function.parameters.size(); i > 0; --i)
         {
-            const auto& param = function.parameters[i];
+            const auto& param = function.parameters[i-1];
             auto value = std::move(valueStack.top());
             valueStack.pop();
 
-            if (param.first.find("variant") == 0)
+            if (determineValueType(value) != param.first)
             {
-                std::string valueType = determineValueType(std::move(value));
-                if (param.first.find(valueType) == std::string::npos)
-                {
-                    throw InterpreterException("Type " + valueType + " is not allowed in " + param.first);
-                }
+                throw InterpreterException("Invalid argument type\nFound: " +
+                                            determineValueType(value) + "\nExpected: " + 
+                                            param.first);
+            }
+
+            if (std::holds_alternative<std::unique_ptr<Variant>>(value))
+            {
+                std::vector<std::string> allowedTypes = std::get<std::unique_ptr<Variant>>(value)->allowedTypes;
+                size_t active_index = std::get<std::unique_ptr<Variant>>(value)->active_index;
+                std::vector<Value> values;
+                values.resize(allowedTypes.size());
+                values[active_index] = std::move(value);
+                currentScope().variants[param.first] = Variant{allowedTypes, active_index, std::move(values)};
             }
             else
             {
-                value = castValueType(value, param.first);
+                currentScope().variables[param.second] = Variable{false, param.first, std::move(value)};
             }
-            
-            currentScope().variables[param.second] = Variable{false, param.first, std::move(value)};
         }
-
+        size_t callSizeBefore = callStack.size();
         function.block->accept(*this);
+        if (callStack.size() == callSizeBefore)
+        {
+            exitCallContext();
+        }
     }
+    else
+    {
+        // TODO change to getting variable or variant
 
-    Variable& variable = getVariable(identifier);
-    valueStack.push(std::move(variable.value));
+        Variable& variable = getVariable(identifier);
+        valueStack.push(std::move(variable.value));
+    }
 }
 
 void Interpreter::visit(const ArgumentListNode& node)
@@ -936,12 +987,41 @@ void Interpreter::visit(const StructCreationNode& node)
     std::string identifier = node.getIdentifier();
 
     auto arguments = node.getArguments();
+    size_t stackSizeBefore = valueStack.size();
     arguments->accept(*this);
+    size_t argumentCount = valueStack.size() - stackSizeBefore;
 
     Structure& structure = getStructure(type);
 
-    // ...
-    
+    if (argumentCount != structure.fields.size())
+    {
+        throw InterpreterException("Structure " + identifier +
+                                    " requires " + std::to_string(structure.fields.size()) +
+                                    " argument(s), but " + std::to_string(argumentCount) +
+                                    " were given");
+    }
+
+    StructureInstance structInstance;
+    structInstance.type = type;
+
+    for (auto i = structure.fields.size(); i > 0; --i)
+    {
+        const auto& field = structure.fields[i - 1];
+        auto value = std::move(valueStack.top());
+        valueStack.pop();
+
+        if (determineValueType(value) != field.type)
+        {
+            throw InterpreterException("Invalid argument type for field " + field.identifier + 
+                                        " in structure " + type + 
+                                        "\nFound: " + determineValueType(value) + 
+                                        "\nExpected: " + field.type);
+        }
+
+        structInstance.values[field.identifier] = std::move(value);
+    }
+
+    currentScope().structInstances[identifier] = std::move(structInstance);
 }
 
 void Interpreter::visit(const StructFieldListNode& node)
@@ -965,65 +1045,104 @@ void Interpreter::visit(const StructFieldNode& node)
     }
     else if (std::holds_alternative<std::unique_ptr<VariantDeclarationNode>>(node.getContent()))
     {
-        type = "variant";
         auto variantDeclaration = std::get<std::unique_ptr<VariantDeclarationNode>>(node.getContent()).get();
         variantDeclaration->accept(*this);
-        // identifier = variantDeclaration->getIdentifier();
-        // currentScope().variants.erase(identifier);
+
+        identifier = variantDeclaration->getIdentifier();
+        type = buildVariantType(currentScope().variants[identifier]);
+        
+        currentScope().variants.erase(identifier);
     }
     if (isMutable && type != "int" && type != "float" && type != "string" && type != "bool")
     {
         throw InterpreterException("Cannot use 'mut' to this type of field: " + type);
     }
-    fieldBuffer[identifier] = Field{isMutable, type};
+    fieldBuffer.push_back(Field{isMutable, type, identifier});
 }
 
 void Interpreter::visit(const VariantNode& node)
 {
-    std::string variantType = "variant[";
-
     for (size_t i = 0; i < node.getTypes().size(); ++i)
     {
         const auto& type = node.getTypes()[i];
 
         if (std::holds_alternative<std::string>(type))
         {
-            variantType += std::get<std::string>(type);
+            parameterTypes.push_back(std::get<std::string>(type));
         }
         else if (std::holds_alternative<std::unique_ptr<VariantNode>>(type))
         {
+            std::string variantType = "variant[";
+            size_t initialSize = parameterTypes.size();
+
             auto variant = std::get<std::unique_ptr<VariantNode>>(type).get();
             variant->accept(*this);
 
-            variantType += parameterTypes.back();
-            parameterTypes.pop_back();
-        }
+            for (size_t j = initialSize; j < parameterTypes.size(); ++j)
+            {
+                if (j > initialSize)
+                {
+                    variantType += ", ";
+                }
+                variantType += parameterTypes[j];
+            }
 
-        if (i != node.getTypes().size())
-        {
-            variantType += ", ";
+            variantType += "]";
+            parameterTypes.resize(initialSize);
+            parameterTypes.push_back(variantType); 
         }
     }
-    variantType += "]";
-    parameterTypes.push_back(variantType);
 }
 
 void Interpreter::visit(const MatchCaseNode& node)
 {
+    auto value = std::move(valueStack.top());
+    valueStack.pop();
+
+    std::string type;
     if (std::holds_alternative<std::string>(node.getType()))
     {
-        std::string regularType = std::get<std::string>(node.getType());
+        type = std::get<std::string>(node.getType());
     }
     else if (std::holds_alternative<std::unique_ptr<VariantNode>>(node.getType()))
     {
         auto variant = std::get<std::unique_ptr<VariantNode>>(node.getType()).get();
         variant->accept(*this);
+        type = parameterTypes.back();
+        parameterTypes.pop_back();
     }
 
     std::string identifier = node.getIdentifier();
+    size_t active_index = std::get<std::unique_ptr<Variant>>(value)->active_index;
 
-    auto block = node.getBlock();
-    block->accept(*this);
+    if (type == std::get<std::unique_ptr<Variant>>(value)->allowedTypes[active_index])
+    {
+        enterScope();
+        auto storedValue = std::move(std::get<std::unique_ptr<Variant>>(value)->values[active_index]);
+        if (std::holds_alternative<int>(storedValue) ||
+            std::holds_alternative<float>(storedValue) ||
+            std::holds_alternative<std::string>(storedValue) ||
+            std::holds_alternative<bool>(storedValue))
+        {
+            currentScope().variables[identifier] = Variable{false, type, std::move(storedValue)};
+        }
+        else if (std::holds_alternative<std::unique_ptr<Variant>>(storedValue))
+        {
+            auto& variant = std::get<std::unique_ptr<Variant>>(value);
+            std::vector<std::string> allowedTypes = variant->allowedTypes;
+            size_t active_index = variant->active_index;
+            std::vector<Value> values;
+            values.resize(allowedTypes.size());
+            values[active_index] = std::move(value);
+            currentScope().variants[identifier] = Variant{allowedTypes, active_index, std::move(values)};
+        }
+        node.getBlock()->accept(*this);
+        exitScope();
+    }
+    else
+    {
+        valueStack.push(std::move(value));
+    }
 }
 
 void Interpreter::visit(const IntLiteralNode& node)

@@ -53,20 +53,19 @@ struct Field
 {
     bool isMutable;
     std::string type;
+    std::string identifier;
 };
 
 struct Structure
 {
-    std::unordered_map<std::string, Field> fields;
+    std::vector<Field> fields;
 };
 
 struct Variant
 {
-    std::string type;
-    // std::vector<std::string> allowedTypes
-    // std::vector values
-    // size_t active_field
-    Value value;
+    std::vector<std::string> allowedTypes;
+    size_t active_index = -1;
+    std::vector<Value> values;
 };
 
 struct StructureInstance
@@ -104,7 +103,7 @@ private:
     std::stack<FunctionCallContext> callStack;
     std::vector<std::string> parameterTypes;
     std::vector<std::string> parameterIdentifiers;
-    std::unordered_map<std::string, Field> fieldBuffer;
+    std::vector<Field> fieldBuffer;
     std::stack<Value> valueStack;
 
     Scope& currentScope();
@@ -114,10 +113,12 @@ private:
     void exitCallContext();
     void checkDuplicateId(const std::string& identifier);
     Value castValueType(const Value& value, const std::string& targetType);
+    Function& getFunction(const std::string& identifier);
     Variable& getVariable(const std::string& identifier);
     Structure& getStructure(const std::string& identifier);
     Variant& getVariant(const std::string& identifier);
     StructureInstance& getStructureInstance(const std::string& identifier);
+    std::string buildVariantType(const Variant& variant);
     std::string determineValueType(const Value& value);
 
 public:
