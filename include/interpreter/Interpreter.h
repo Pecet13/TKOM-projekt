@@ -36,11 +36,12 @@
 #include <unordered_map>
 #include <stack>
 #include <iostream>
+#include <algorithm>
 
 struct Variant;
 struct StructureInstance;
 
-using Value = std::variant<int, float, std::string, bool, std::unique_ptr<Variant>, std::unique_ptr<StructureInstance>>;
+using Value = std::variant<int, float, std::string, bool, std::shared_ptr<Variant>, std::shared_ptr<StructureInstance>>;
 
 struct Function
 {
@@ -66,6 +67,12 @@ struct Variant
     std::vector<std::string> allowedTypes;
     size_t active_index = -1;
     std::vector<Value> values;
+
+    Variant() = default;
+
+    Variant(const std::vector<std::string>& allowedTypes, size_t active_index, const std::vector<Value>& values)
+        : allowedTypes(allowedTypes), active_index(active_index), values(values) 
+    {}
 };
 
 struct StructureInstance
@@ -98,6 +105,8 @@ struct FunctionCallContext
 class Interpreter : public NodeVisitor
 {
 private:
+    int recursionDepth = 0;
+    const int maxRecursionDepth = 1000;
     std::unordered_map<std::string, Function> functions;
     Scope globalScope;
     std::stack<FunctionCallContext> callStack;
@@ -105,6 +114,8 @@ private:
     std::vector<std::string> parameterIdentifiers;
     std::vector<Field> fieldBuffer;
     std::stack<Value> valueStack;
+    std::variant<std::monostate, Variable*, Variant*, std::pair<StructureInstance*, std::string>> toAssign;
+    bool typeMatched = false;
 
     Scope& currentScope();
     void enterScope();
