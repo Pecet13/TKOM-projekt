@@ -37,6 +37,7 @@
 #include <stack>
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 struct Variant;
 struct StructureInstance;
@@ -65,14 +66,13 @@ struct Structure
 struct Variant
 {
     std::vector<std::string> allowedTypes;
-    size_t active_index = -1;
+    size_t activeIndex = -1;
     std::vector<Value> values;
 
     Variant() = default;
 
     Variant(const std::vector<std::string>& allowedTypes, size_t active_index, const std::vector<Value>& values)
-        : allowedTypes(allowedTypes), active_index(active_index), values(values) 
-    {}
+        : allowedTypes(allowedTypes), activeIndex(activeIndex), values(values) {}
 };
 
 struct StructureInstance
@@ -105,8 +105,9 @@ struct FunctionCallContext
 class Interpreter : public NodeVisitor
 {
 private:
-    int recursionDepth = 0;
-    const int maxRecursionDepth = 1000;
+    size_t recursionDepth = 0;
+    const size_t maxRecursionDepth = 1000;
+    const size_t maxLoopIterations = 100000;
     std::unordered_map<std::string, Function> functions;
     Scope globalScope;
     std::stack<FunctionCallContext> callStack;
@@ -133,7 +134,7 @@ private:
     std::string determineValueType(const Value& value);
 
 public:
-    Interpreter();
+    Interpreter(const size_t maxRecursionDepth = 1000, const size_t maxLoopIterations = 100000);
 
     void visit(const ProgramNode& node) override;
     void visit(const FunctionDeclarationNode& node) override;

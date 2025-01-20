@@ -13,7 +13,7 @@ public:
     InterpreterException(const std::string& message)
         : std::runtime_error(message)
     {
-        fullMessage = message;
+        fullMessage = "Error: " + message;
     }
 
     virtual const char* what() const noexcept override

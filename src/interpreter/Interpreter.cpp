@@ -23,7 +23,7 @@ void Interpreter::enterCallContext(const std::string& identifier)
 {
     if (++recursionDepth > maxRecursionDepth)
     {
-        throw InterpreterException("Maximum recursion depth exceeded");
+        throw InterpreterException("maximum recursion depth exceeded");
     }
 
     callStack.push(FunctionCallContext{identifier});
@@ -32,8 +32,21 @@ void Interpreter::enterCallContext(const std::string& identifier)
 
 void Interpreter::exitCallContext()
 {
+    std::string functionIdentifier = callStack.top().identifier;
+    while (!callStack.top().scopes.empty()) 
+    {
+        exitScope();
+    }
     callStack.pop();
     --recursionDepth;
+
+    if (functions[functionIdentifier].type != "void")
+    {
+        if (valueStack.empty())
+        {
+            throw InterpreterException("non-void function '" + functionIdentifier + "' does not return a value");
+        }
+    }
 }
 
 void Interpreter::checkDuplicateId(const std::string& identifier)
@@ -47,7 +60,7 @@ void Interpreter::checkDuplicateId(const std::string& identifier)
                 it->structInstances.find(identifier) != it->structInstances.end() ||
                 it->variants.find(identifier) != it->variants.end())
             {
-                throw InterpreterException("Identifier already in use: " + identifier);
+                throw InterpreterException("identifier already in use: " + identifier);
             }
         }
     }
@@ -56,7 +69,7 @@ void Interpreter::checkDuplicateId(const std::string& identifier)
         globalScope.structInstances.find(identifier) != globalScope.structInstances.end() ||
         globalScope.variants.find(identifier) != globalScope.variants.end())
     {
-        throw InterpreterException("Identifier already in use: " + identifier);
+        throw InterpreterException("identifier already in use: " + identifier);
     }
 }
 
@@ -64,11 +77,11 @@ Value Interpreter::castValueType(const Value& value, const std::string& targetTy
 {
     if (std::holds_alternative<std::shared_ptr<Variant>>(value))
     {
-        throw InterpreterException("Cannot cast value from type: variant");
+        throw InterpreterException("cannot cast value from type: variant");
     }
     if (std::holds_alternative<std::shared_ptr<StructureInstance>>(value))
     {
-        throw InterpreterException("Cannot cast value from type: " + std::get<std::shared_ptr<StructureInstance>>(value).get()->type);
+        throw InterpreterException("cannot cast value from type: " + std::get<std::shared_ptr<StructureInstance>>(value).get()->type);
     }
     if (targetType == "int")
     {
@@ -92,11 +105,11 @@ Value Interpreter::castValueType(const Value& value, const std::string& targetTy
             }
             catch (const std::invalid_argument& e)
             {
-                throw InterpreterException("Cannot convert to integer (invalid argument): " + std::get<std::string>(value));
+                throw InterpreterException("cannot convert to integer (invalid argument): " + std::get<std::string>(value));
             }
             catch (const std::out_of_range& e)
             {
-                throw InterpreterException("Cannot convert to integer (overflow): " + std::get<std::string>(value));
+                throw InterpreterException("cannot convert to integer (overflow): " + std::get<std::string>(value));
             }
         }
     }
@@ -122,16 +135,16 @@ Value Interpreter::castValueType(const Value& value, const std::string& targetTy
             }
             catch (const std::invalid_argument& e)
             {
-                throw InterpreterException("Cannot convert to float (invalid argument): " + std::get<std::string>(value));
+                throw InterpreterException("cannot convert to float (invalid argument): " + std::get<std::string>(value));
             }
             catch (const std::out_of_range& e)
             {
-                throw InterpreterException("Cannot convert to float (overflow): " + std::get<std::string>(value));
+                throw InterpreterException("cannot convert to float (overflow): " + std::get<std::string>(value));
             }
         }
         else
         {
-            throw InterpreterException("Cannot cast value from this type");
+            throw InterpreterException("cannot cast value from this type");
         }
     }
     if (targetType == "string")
@@ -150,11 +163,12 @@ Value Interpreter::castValueType(const Value& value, const std::string& targetTy
         }
         if (std::holds_alternative<bool>(value))
         {
-            return std::get<bool>(value) ? "true" : "false";
+            std::string str = std::get<bool>(value) ? "true" : "false";
+            return str;
         }
         else
         {
-            throw InterpreterException("Cannot cast value from this type");
+            throw InterpreterException("cannot cast value from this type");
         }
     }
     if (targetType == "bool")
@@ -179,18 +193,18 @@ Value Interpreter::castValueType(const Value& value, const std::string& targetTy
         }
         else
         {
-            throw InterpreterException("Cannot cast value from this type");
+            throw InterpreterException("cannot cast value from this type");
         }
     }
 
-    throw InterpreterException("Unsupported type for converting value: " + targetType);
+    throw InterpreterException("unsupported type for converting value: " + targetType);
 }
 
 Function& Interpreter::getFunction(const std::string& identifier)
 {
     if (functions.find(identifier) == functions.end())
     {
-        throw InterpreterException("Function not found: " + identifier);
+        throw InterpreterException("function not found: " + identifier);
     }
 
     return functions[identifier];
@@ -209,7 +223,7 @@ Variable& Interpreter::getVariable(const std::string& identifier)
     {
         return globalScope.variables.at(identifier);
     }
-    throw InterpreterException("Variable not found: " + identifier);
+    throw InterpreterException("variable not found: " + identifier);
 }
 
 Structure& Interpreter::getStructure(const std::string& identifier)
@@ -225,7 +239,7 @@ Structure& Interpreter::getStructure(const std::string& identifier)
     {
         return globalScope.structs.at(identifier);
     }
-    throw InterpreterException("Struct not found: " + identifier);
+    throw InterpreterException("struct not found: " + identifier);
 }
 
 Variant& Interpreter::getVariant(const std::string& identifier)
@@ -241,7 +255,7 @@ Variant& Interpreter::getVariant(const std::string& identifier)
     {
         return globalScope.variants.at(identifier);
     }
-    throw InterpreterException("Variant not found: " + identifier);
+    throw InterpreterException("variant not found: " + identifier);
 }
 
 StructureInstance& Interpreter::getStructureInstance(const std::string& identifier)
@@ -257,7 +271,7 @@ StructureInstance& Interpreter::getStructureInstance(const std::string& identifi
     {
         return globalScope.structInstances.at(identifier);
     }
-    throw InterpreterException("Struct instance not found: " + identifier);
+    throw InterpreterException("struct instance not found: " + identifier);
 }
 
 std::string Interpreter::buildVariantType(const Variant& variant)
@@ -299,11 +313,11 @@ std::string Interpreter::determineValueType(const Value& value)
     {
         return std::get<std::shared_ptr<StructureInstance>>(value).get()->type;
     }
-    throw InterpreterException("Invalid value type");
+    throw InterpreterException("invalid value type");
 }
 
-Interpreter::Interpreter()
-{}
+Interpreter::Interpreter(const size_t maxRecursionDepth, const size_t maxLoopIterations)
+    : maxRecursionDepth(maxRecursionDepth), maxLoopIterations(maxLoopIterations) {}
 
 void Interpreter::visit(const ProgramNode& node)
 {
@@ -313,7 +327,7 @@ void Interpreter::visit(const ProgramNode& node)
     }
     if (functions.find("main") == functions.end())
     {
-        throw InterpreterException("Missing main function");
+        throw InterpreterException("missing main function");
     }
     enterCallContext("main");
     functions["main"].block->accept(*this);
@@ -323,7 +337,7 @@ void Interpreter::visit(const FunctionDeclarationNode& node)
 {
     if (functions.find(node.getIdentifier()) != functions.end())
     {
-        throw InterpreterException("Duplicate function declaration: " + node.getIdentifier());
+        throw InterpreterException("duplicate function declaration: " + node.getIdentifier());
     }
     if (node.getIdentifier() == "main" &&  node.getType() != "int")
     {
@@ -349,6 +363,11 @@ void Interpreter::visit(const VariableDeclarationNode& node)
     checkDuplicateId(node.getIdentifier());
     Value value;
 
+    if (node.getType() == "string")
+    {
+        value = std::string("");
+    }
+
     if (node.getExpression() != nullptr)
     {
         node.getExpression()->accept(*this);
@@ -367,11 +386,11 @@ void Interpreter::visit(const VariantDeclarationNode& node)
 
     node.getVariant()->accept(*this);
 
-    size_t active_index = -1;
+    size_t activeIndex = -1;
     std::vector<Value> values;
     values.resize(parameterTypes.size());
 
-    currentScope().variants[node.getIdentifier()] = Variant{parameterTypes, active_index, values};
+    currentScope().variants[node.getIdentifier()] = Variant{parameterTypes, activeIndex, values};
     parameterTypes.clear();
 }
 
@@ -395,6 +414,7 @@ void Interpreter::visit(const BlockNode& node)
         {
             break;
         }
+        currentScope();
     }
 }
 
@@ -415,7 +435,7 @@ void Interpreter::visit(const AssignmentNode& node)
             Variable* variable = std::get<Variable*>(toAssign);
             if (!variable->isMutable)
             {
-                throw InterpreterException("Cannot modify a const value");
+                throw InterpreterException("cannot modify a const value");
             }
             variable->value = castValueType(newValue, variable->type);
         }
@@ -430,7 +450,7 @@ void Interpreter::visit(const AssignmentNode& node)
 
             if (fieldIt == structure.fields.end())
             {
-                throw InterpreterException("Field '" + fieldName + "' not found in structure '" + structInstance->type + "'");
+                throw InterpreterException("field '" + fieldName + "' not found in structure '" + structInstance->type + "'");
             }
 
             if (std::holds_alternative<int>(structInstance->values[fieldName]) ||
@@ -440,7 +460,7 @@ void Interpreter::visit(const AssignmentNode& node)
             {
                 if (!fieldIt->isMutable)
                 {
-                    throw InterpreterException("Cannot modify a const value");
+                    throw InterpreterException("cannot modify a const value");
                 }
                 std::string type = determineValueType(structInstance->values[fieldName]);
                 structInstance->values[fieldName] = castValueType(newValue, type);
@@ -459,14 +479,15 @@ void Interpreter::visit(const AssignmentNode& node)
             if (it != variant->allowedTypes.end())
             {
                 size_t index = std::distance(variant->allowedTypes.begin(), it);
-                variant->active_index = index;
+                variant->activeIndex = index;
                 variant->values[index] = newValue;
             }
             else
             {
-                throw InterpreterException("Type " + newType + " is not allowed in variant.");
+                throw InterpreterException("type " + newType + " is not allowed in variant.");
             }
         }
+
     }
     toAssign = std::monostate{};
 }
@@ -478,6 +499,8 @@ void Interpreter::visit(const IfStatementNode& node)
     bool condition = std::get<bool>(castValueType(valueStack.top(), "bool"));
     valueStack.pop();
 
+    size_t callSizeBefore = callStack.size();
+
     enterScope();
     if (condition)
     {
@@ -487,7 +510,10 @@ void Interpreter::visit(const IfStatementNode& node)
     {
         node.getElseBlock()->accept(*this);
     }
-    exitScope();
+    if (callStack.size() == callSizeBefore)
+    {
+        exitScope();
+    }
 }
 
 void Interpreter::visit(const WhileStatementNode& node)
@@ -496,12 +522,22 @@ void Interpreter::visit(const WhileStatementNode& node)
 
     bool condition = std::get<bool>(castValueType(valueStack.top(), "bool"));
     valueStack.pop();
+    size_t iterationCount = 0;
+    size_t callSizeBefore = callStack.size();
 
     while (condition)
     {
+        if (++iterationCount > maxLoopIterations)
+        {
+            throw InterpreterException("maximum while loop iterations");
+        }
+
         enterScope();
         node.getBlock()->accept(*this);
-        exitScope();
+        if (callStack.size() == callSizeBefore)
+        {
+            exitScope();
+        }
         node.getCondition()->accept(*this);
 
         condition = std::get<bool>(castValueType(valueStack.top(), "bool"));
@@ -514,7 +550,7 @@ void Interpreter::visit(const ReturnStatementNode& node)
     std::string functionIdentifier = callStack.top().identifier;
     if (functions[functionIdentifier].type == "void" && node.getExpression() != nullptr)
     {
-        throw InterpreterException("Cannot return a value in void function");
+        throw InterpreterException("cannot return a value in void function");
     }
     
     node.getExpression()->accept(*this);
@@ -534,7 +570,12 @@ void Interpreter::visit(const MatchStatementNode& node)
 
     if (!std::holds_alternative<std::shared_ptr<Variant>>(valueStack.top()))
     {
-        throw InterpreterException("Invalid type for match");
+        throw InterpreterException("invalid type for match");
+    }
+
+    if (std::get<std::shared_ptr<Variant>>(valueStack.top())->activeIndex == -1)
+    {
+        throw InterpreterException("variant does not hold any value");
     }
 
     typeMatched = false;
@@ -547,7 +588,7 @@ void Interpreter::visit(const MatchStatementNode& node)
         {
             if (defaultCase != nullptr)
             {
-                throw InterpreterException("Duplicate default case");
+                throw InterpreterException("duplicate default case");
             }
 
             defaultCase = matchCase.get();
@@ -586,7 +627,21 @@ void Interpreter::visit(const ParameterNode& node)
     else if (std::holds_alternative<std::unique_ptr<VariantNode>>(node.getType()))
     {
         parameterIdentifiers.push_back(node.getIdentifier());
+        std::string variantType = "variant[";
+        size_t initialSize = parameterTypes.size();
         std::get<std::unique_ptr<VariantNode>>(node.getType()).get()->accept(*this);
+        for (size_t j = initialSize; j < parameterTypes.size(); ++j)
+        {
+            if (j > initialSize)
+            {
+                variantType += ", ";
+            }
+            variantType += parameterTypes[j];
+        }
+
+        variantType += "]";
+        parameterTypes.resize(initialSize);
+        parameterTypes.push_back(variantType); 
     }
 }
 
@@ -674,7 +729,7 @@ void Interpreter::visit(const ComparisonNode& node)
                 }
                 else
                 {
-                    throw InterpreterException("Invalid types for operation: " + determineValueType(a) + " == " + determineValueType(b));
+                    throw InterpreterException("invalid types for operation: " + determineValueType(a) + " == " + determineValueType(b));
                 }
                 break;
             }
@@ -698,7 +753,7 @@ void Interpreter::visit(const ComparisonNode& node)
                 }
                 else
                 {
-                    throw InterpreterException("Invalid types for operation: " + determineValueType(a) + " != " + determineValueType(b));
+                    throw InterpreterException("invalid types for operation: " + determineValueType(a) + " != " + determineValueType(b));
                 }
                 break;
             }
@@ -714,7 +769,7 @@ void Interpreter::visit(const ComparisonNode& node)
                 }
                 else
                 {
-                    throw InterpreterException("Invalid types for operation: " + determineValueType(a) + " > " + determineValueType(b));
+                    throw InterpreterException("invalid types for operation: " + determineValueType(a) + " > " + determineValueType(b));
                 }
                 break;
             }
@@ -730,7 +785,7 @@ void Interpreter::visit(const ComparisonNode& node)
                 }
                 else
                 {
-                    throw InterpreterException("Invalid types for operation: " + determineValueType(a) + " >= " + determineValueType(b));
+                    throw InterpreterException("invalid types for operation: " + determineValueType(a) + " >= " + determineValueType(b));
                 }
                 break;
             }
@@ -746,7 +801,7 @@ void Interpreter::visit(const ComparisonNode& node)
                 }
                 else
                 {
-                    throw InterpreterException("Invalid types for operation: " + determineValueType(a) + " < " + determineValueType(b));
+                    throw InterpreterException("invalid types for operation: " + determineValueType(a) + " < " + determineValueType(b));
                 }
                 break;
             }
@@ -762,7 +817,7 @@ void Interpreter::visit(const ComparisonNode& node)
                 }
                 else
                 {
-                    throw InterpreterException("Invalid types for operation: " + determineValueType(a) + " <= " + determineValueType(b));
+                    throw InterpreterException("invalid types for operation: " + determineValueType(a) + " <= " + determineValueType(b));
                 }
                 break;
             }
@@ -793,11 +848,23 @@ void Interpreter::visit(const AddExpressionNode& node)
             {
                 if (std::holds_alternative<int>(a))
                 {
-                    a = std::get<int>(a) + std::get<int>(castValueType(b, "int"));
+                    int aInt = std::get<int>(a);
+                    int bInt = std::get<int>(castValueType(b, "int"));
+                    
+                    if ((bInt > 0 && aInt > std::numeric_limits<int>::max() - bInt) ||
+                        (bInt < 0 && aInt < std::numeric_limits<int>::min() - bInt))
+                    {
+                        throw InterpreterException("integer overflow");
+                    }
+                    a = aInt + bInt;
                 }
                 else if (std::holds_alternative<float>(a))
                 {
                     a = std::get<float>(a) + std::get<float>(castValueType(b, "float"));
+                    if (std::isinf(std::get<float>(a)))
+                    {
+                        throw InterpreterException("float overflow");
+                    }
                 }
                 else if (std::holds_alternative<std::string>(a))
                 {
@@ -805,7 +872,7 @@ void Interpreter::visit(const AddExpressionNode& node)
                 }
                 else
                 {
-                    throw InterpreterException("Invalid types for operation: " + determineValueType(a) + " + " + determineValueType(b));
+                    throw InterpreterException("invalid types for operation: " + determineValueType(a) + " + " + determineValueType(b));
                 }
                 break;
             }
@@ -813,15 +880,27 @@ void Interpreter::visit(const AddExpressionNode& node)
             {
                 if (std::holds_alternative<int>(a))
                 {
-                    a = std::get<int>(a) - std::get<int>(castValueType(b, "int"));
+                    int aInt = std::get<int>(a);
+                    int bInt = std::get<int>(castValueType(b, "int"));
+                    
+                    if ((bInt > 0 && aInt < std::numeric_limits<int>::min() + bInt) ||
+                        (bInt < 0 && aInt > std::numeric_limits<int>::max() + bInt))
+                    {
+                        throw InterpreterException("integer overflow");
+                    }
+                    a = aInt - bInt;
                 }
                 else if (std::holds_alternative<float>(a))
                 {
                     a = std::get<float>(a) - std::get<float>(castValueType(b, "float"));
+                    if (std::isinf(std::get<float>(a)))
+                    {
+                        throw InterpreterException("float overflow");
+                    }
                 }
                 else
                 {
-                    throw InterpreterException("Invalid types for operation: " + determineValueType(a) + " - " + determineValueType(b));
+                    throw InterpreterException("invalid types for operation: " + determineValueType(a) + " - " + determineValueType(b));
                 }
                 break;
             }
@@ -850,43 +929,64 @@ void Interpreter::visit(const MultExpressionNode& node)
         {
             case MultOperator::ASTERISK:
             {
-                if (std::holds_alternative<int>(a) && std::holds_alternative<int>(b))
-                {
-                    a = std::get<int>(a) * std::get<int>(b);
-                }
-                else if (std::holds_alternative<float>(a) || std::holds_alternative<float>(b))
+                if (std::holds_alternative<float>(a) || std::holds_alternative<float>(b))
                 {
                     a = std::get<float>(castValueType(a, "float")) * std::get<float>(castValueType(b, "float"));
+                    if (std::isinf(std::get<float>(a)))
+                    {
+                        throw InterpreterException("float overflow");
+                    }
+                }
+                else if (std::holds_alternative<int>(a))
+                {
+                    int aInt = std::get<int>(a);
+                    int bInt = std::get<int>(castValueType(b, "int"));
+
+                    if (bInt != 0)
+                    {
+                        if (aInt > std::numeric_limits<int>::max() / bInt ||
+                            aInt < std::numeric_limits<int>::min() / bInt)
+                        {
+                            throw InterpreterException("integer overflow");
+                        }
+                    }
+                    a = aInt * bInt;
                 }
                 else
                 {
-                    throw InterpreterException("Invalid types for operation: " + determineValueType(a) + " * " + determineValueType(b));
+                    throw InterpreterException("invalid types for operation: " + determineValueType(a) + " * " + determineValueType(b));
                 }
                 break;
             }
             case MultOperator::SLASH:
             {
-                if (std::holds_alternative<int>(a) && std::holds_alternative<int>(b))
-                {
-                    if (std::get<int>(b) == 0)
-                    {
-                        throw InterpreterException("Division by zero: " + std::get<std::string>(castValueType(a, "string")) +
-                                                    " / " + std::get<std::string>(castValueType(b, "string")));
-                    }
-                    a = std::get<int>(a) / std::get<int>(b);
-                }
-                else if (std::holds_alternative<float>(a) || std::holds_alternative<float>(b))
+                if (std::holds_alternative<float>(a) || std::holds_alternative<float>(b))
                 {
                     if (std::get<float>(castValueType(b, "float")) == 0)
                     {
-                        throw InterpreterException("Division by zero: " + std::get<std::string>(castValueType(a, "string")) +
+                        throw InterpreterException("division by zero: " + std::get<std::string>(castValueType(a, "string")) +
                                                     " / " + std::get<std::string>(castValueType(b, "string")));
                     }
                     a = std::get<float>(castValueType(a, "float")) / std::get<float>(castValueType(b, "float"));
+                    if (std::isinf(std::get<float>(a)))
+                    {
+                        throw InterpreterException("float overflow");
+                    }
+                }
+                else if (std::holds_alternative<int>(a))
+                {
+                    int aInt = std::get<int>(a);
+                    int bInt = std::get<int>(castValueType(b, "int"));
+                    if (bInt == 0)
+                    {
+                        throw InterpreterException("division by zero: " + std::get<std::string>(castValueType(a, "string")) +
+                                                    " / " + std::get<std::string>(castValueType(b, "string")));
+                    }
+                    a = aInt / bInt;
                 }
                 else
                 {
-                    throw InterpreterException("Invalid types for operation: " + determineValueType(a) + " / " + determineValueType(b));
+                    throw InterpreterException("invalid types for operation: " + determineValueType(a) + " / " + determineValueType(b));
                 }
                 break;
             }
@@ -926,7 +1026,7 @@ void Interpreter::visit(const TermNode& node)
             }
             else
             {
-                throw InterpreterException("Unsupported type for this negation type: !" + determineValueType(value));
+                throw InterpreterException("unsupported type for this negation type: !" + determineValueType(value));
             }
             break;
         }
@@ -946,7 +1046,7 @@ void Interpreter::visit(const TermNode& node)
             }
             else
             {
-                throw InterpreterException("Unsupported type for this negation type: -" + determineValueType(value));
+                throw InterpreterException("unsupported type for this negation type: -" + determineValueType(value));
             }
             break;
         }
@@ -963,7 +1063,7 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
     {
         if (!std::holds_alternative<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()))
         {
-            throw InterpreterException("Calling print requires an argument");
+            throw InterpreterException("calling print requires an argument");
         }
 
         auto arguments = std::get<std::unique_ptr<ArgumentListNode>>(node.getAdditionalContent()).get();
@@ -973,7 +1073,7 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
 
         if (argumentCount != 1)
         {
-            throw InterpreterException("Function " + identifier +
+            throw InterpreterException("function " + identifier +
                                         " requires 1 argument(s), but " + std::to_string(argumentCount) +
                                         " were given");
         }
@@ -1017,12 +1117,12 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
         {
             if (!structInstance->values.count(fields[i]))
             {
-                throw InterpreterException("Field not found: " + fields[i]);
+                throw InterpreterException("field not found: " + fields[i]);
             }
 
             if (!std::holds_alternative<std::shared_ptr<StructureInstance>>(structInstance->values[fields[i]]))
             {
-                throw InterpreterException("Attempted field access on non-struct field: " + fields[i]);
+                throw InterpreterException("attempted field access on non-struct field: " + fields[i]);
             }
 
             structInstance = std::get<std::shared_ptr<StructureInstance>>(structInstance->values[fields[i]]).get();
@@ -1031,7 +1131,7 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
         toAssign = std::make_pair(structInstance, fields.back());
         if (!structInstance->values.count(fields.back()))
         {
-            throw InterpreterException("Field not found: " + fields.back());
+            throw InterpreterException("field not found: " + fields.back());
         }
         valueStack.push(structInstance->values[fields.back()]);
     }
@@ -1046,7 +1146,7 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
 
         if (argumentCount != function.parameters.size())
         {
-            throw InterpreterException("Function " + identifier +
+            throw InterpreterException("function " + identifier +
                                         " requires " + std::to_string(function.parameters.size()) +
                                         " argument(s), but " + std::to_string(argumentCount) +
                                         " were given");
@@ -1061,7 +1161,7 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
 
             if (determineValueType(value) != param.first)
             {
-                throw InterpreterException("Invalid argument type\nFound: " +
+                throw InterpreterException("invalid argument type\nFound: " +
                                             determineValueType(value) + "\nExpected: " + 
                                             param.first);
             }
@@ -1069,15 +1169,15 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
             if (std::holds_alternative<std::shared_ptr<Variant>>(value))
             {
                 std::vector<std::string> allowedTypes = std::get<std::shared_ptr<Variant>>(value)->allowedTypes;
-                size_t active_index = std::get<std::shared_ptr<Variant>>(value)->active_index;
+                size_t activeIndex = std::get<std::shared_ptr<Variant>>(value)->activeIndex;
                 std::vector<Value> values;
                 values.resize(allowedTypes.size());
-                values[active_index] = value;
-                currentScope().variants[param.first] = Variant{allowedTypes, active_index, values};
+                values[activeIndex] = value;
+                currentScope().variants[param.second] = Variant{allowedTypes, activeIndex, values};
             }
             else
             {
-                currentScope().variables[param.second] = Variable{false, param.first, value};
+                currentScope().variables[param.second] = Variable{true, param.first, value};
             }
         }
         size_t callSizeBefore = callStack.size();
@@ -1091,18 +1191,26 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
     {
         try
         {
-            Variable& variable = getVariable(identifier);
-            valueStack.push(variable.value);
-            toAssign = &variable;
+            Variant& variant = getVariant(identifier);
+            std::vector<std::string> allowedTypes = variant.allowedTypes;
+            size_t activeIndex = variant.activeIndex;
+            std::vector<Value> values = variant.values;
+            valueStack.push(std::make_shared<Variant>(allowedTypes, activeIndex, values));
+            toAssign = &variant;
         }
         catch(const InterpreterException& e)
         {
-            Variant& variant = getVariant(identifier);
-            std::vector<std::string> allowedTypes = variant.allowedTypes;
-            size_t active_index = variant.active_index;
-            std::vector<Value> values = variant.values;
-            valueStack.push(std::make_shared<Variant>(allowedTypes, active_index, values));
-            toAssign = &variant;
+            try
+            {
+                StructureInstance& structInstance = getStructureInstance(identifier);
+                valueStack.push(std::make_shared<StructureInstance>(structInstance));
+            }
+            catch(const std::exception& e)
+            {
+                Variable& variable = getVariable(identifier);
+                valueStack.push(variable.value);
+                toAssign = &variable;
+            }
         }
     }
 }
@@ -1129,7 +1237,7 @@ void Interpreter::visit(const StructCreationNode& node)
 
     if (argumentCount != structure.fields.size())
     {
-        throw InterpreterException("Structure " + identifier +
+        throw InterpreterException("structure " + identifier +
                                     " requires " + std::to_string(structure.fields.size()) +
                                     " argument(s), but " + std::to_string(argumentCount) +
                                     " were given");
@@ -1146,7 +1254,7 @@ void Interpreter::visit(const StructCreationNode& node)
 
         if (determineValueType(value) != field.type)
         {
-            throw InterpreterException("Invalid argument type for field " + field.identifier + 
+            throw InterpreterException("invalid argument type for field " + field.identifier + 
                                         " in structure " + type + 
                                         "\nFound: " + determineValueType(value) + 
                                         "\nExpected: " + field.type);
@@ -1189,7 +1297,7 @@ void Interpreter::visit(const StructFieldNode& node)
     }
     if (isMutable && type != "int" && type != "float" && type != "string" && type != "bool")
     {
-        throw InterpreterException("Cannot use 'mut' to this type of field: " + type);
+        throw InterpreterException("cannot use 'mut' to this type of field: " + type);
     }
     fieldBuffer.push_back(Field{isMutable, type, identifier});
 }
@@ -1256,13 +1364,13 @@ void Interpreter::visit(const MatchCaseNode& node)
     }
 
     std::string identifier = node.getIdentifier();
-    size_t active_index = std::get<std::shared_ptr<Variant>>(value)->active_index;
+    size_t activeIndex = std::get<std::shared_ptr<Variant>>(value)->activeIndex;
 
-    if (type == std::get<std::shared_ptr<Variant>>(value)->allowedTypes[active_index])
+    if (type == std::get<std::shared_ptr<Variant>>(value)->allowedTypes[activeIndex])
     {
         typeMatched = true;
         enterScope();
-        auto storedValue = std::get<std::shared_ptr<Variant>>(value)->values[active_index];
+        auto storedValue = std::get<std::shared_ptr<Variant>>(value)->values[activeIndex];
         if (std::holds_alternative<int>(storedValue) ||
             std::holds_alternative<float>(storedValue) ||
             std::holds_alternative<std::string>(storedValue) ||
@@ -1274,11 +1382,11 @@ void Interpreter::visit(const MatchCaseNode& node)
         {
             auto& variant = std::get<std::shared_ptr<Variant>>(value);
             std::vector<std::string> allowedTypes = variant->allowedTypes;
-            size_t active_index = variant->active_index;
+            size_t activeIndex = variant->activeIndex;
             std::vector<Value> values;
             values.resize(allowedTypes.size());
-            values[active_index] = value;
-            currentScope().variants[identifier] = Variant(allowedTypes, active_index, values);
+            values[activeIndex] = value;
+            currentScope().variants[identifier] = Variant(allowedTypes, activeIndex, values);
         }
         node.getBlock()->accept(*this);
         exitScope();

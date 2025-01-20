@@ -649,7 +649,7 @@ std::unique_ptr<MultExpressionNode> Parser::parseMultExpression()
             case T_ASTERISK:
                 op = MultOperator::ASTERISK;
                 break;
-            case T_MINUS:
+            case T_SLASH:
                 op = MultOperator::SLASH;
                 break;
         }
