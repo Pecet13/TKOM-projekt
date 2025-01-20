@@ -1085,25 +1085,25 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
 
         if (std::holds_alternative<int>(value))
         {
-            std::cout << std::get<int>(value);
+            std::cout << std::get<int>(value) << std::endl;
         }
         else if (std::holds_alternative<float>(value))
         {
-            std::cout << std::get<float>(value);
+            std::cout << std::get<float>(value) << std::endl;
         }
         else if (std::holds_alternative<std::string>(value))
         {
-            std::cout << std::get<std::string>(value);
+            std::cout << std::get<std::string>(value) << std::endl;
         }
         else if (std::holds_alternative<bool>(value))
         {
             if (std::get<bool>(value))
             {
-                std::cout << "true";
+                std::cout << "true" << std::endl;
             }
             else
             {
-                std::cout << "false";
+                std::cout << "false" << std::endl;
             }
         }
         return;

@@ -65,3 +65,6 @@ add_executable(InterpreterTests tests/InterpreterTests.cpp)
 target_link_libraries(InterpreterTests gtest_main Interpreter)
 gtest_discover_tests(InterpreterTests)
 target_link_libraries(InterpreterTests gtest_main Interpreter Parser Lexer)
+
+add_executable(main main.cpp)
+target_link_libraries(main Interpreter Parser Lexer)

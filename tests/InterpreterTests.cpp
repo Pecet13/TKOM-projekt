@@ -35,7 +35,7 @@ TEST(InterpreterTests, PrintInt)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "5");
+    EXPECT_EQ(ss.str(), "5\n");
 }
 
 TEST(InterpreterTests, PrintFloat)
@@ -57,7 +57,7 @@ TEST(InterpreterTests, PrintFloat)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "1.23");
+    EXPECT_EQ(ss.str(), "1.23\n");
 }
 
 TEST(InterpreterTests, PrintString)
@@ -79,7 +79,7 @@ TEST(InterpreterTests, PrintString)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "Hello world");
+    EXPECT_EQ(ss.str(), "Hello world\n");
 }
 
 TEST(InterpreterTests, PrintBool)
@@ -101,7 +101,7 @@ TEST(InterpreterTests, PrintBool)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "false");
+    EXPECT_EQ(ss.str(), "false\n");
 }
 
 TEST(InterpreterTests, PrintVariable)
@@ -124,7 +124,7 @@ TEST(InterpreterTests, PrintVariable)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "4");
+    EXPECT_EQ(ss.str(), "4\n");
 }
 
 TEST(InterpreterTests, PrintVariable2)
@@ -148,7 +148,7 @@ TEST(InterpreterTests, PrintVariable2)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "hello");
+    EXPECT_EQ(ss.str(), "hello\n");
 }
 
 TEST(InterpreterTests, PrintIntDefault)
@@ -171,7 +171,7 @@ TEST(InterpreterTests, PrintIntDefault)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "0");
+    EXPECT_EQ(ss.str(), "0\n");
 }
 
 TEST(InterpreterTests, PrintFloatDefault)
@@ -194,7 +194,7 @@ TEST(InterpreterTests, PrintFloatDefault)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "0");
+    EXPECT_EQ(ss.str(), "0\n");
 }
 
 TEST(InterpreterTests, PrintStringDefault)
@@ -217,7 +217,7 @@ TEST(InterpreterTests, PrintStringDefault)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "");
+    EXPECT_EQ(ss.str(), "\n");
 }
 
 TEST(InterpreterTests, PrintBoolDefault)
@@ -240,7 +240,7 @@ TEST(InterpreterTests, PrintBoolDefault)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "false");
+    EXPECT_EQ(ss.str(), "false\n");
 }
 
 TEST(InterpreterTests, Assign)
@@ -264,7 +264,7 @@ TEST(InterpreterTests, Assign)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "9");
+    EXPECT_EQ(ss.str(), "9\n");
 }
 
 TEST(InterpreterTests, Assign2)
@@ -278,15 +278,11 @@ TEST(InterpreterTests, Assign2)
                         "[\n"
                             "mut int a = 4;\n"
                             "print(a);\n"
-                            "print(\"\\n\");\n"
                             "int b = 5;\n"
                             "print(b);\n"
-                            "print(\"\\n\");\n"
                             "a = fun(b);\n"
                             "print(a);\n"
-                            "print(\"\\n\");\n"
                             "print(b);\n"
-                            "print(\"\\n\");\n"
                             "return 0;\n"
                         "]";
     std::stringstream source{input};
@@ -343,7 +339,7 @@ TEST(InterpreterTests, IntPlusInt)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "12");
+    EXPECT_EQ(ss.str(), "12\n");
 }
 
 TEST(InterpreterTests, IntPlusFloat)
@@ -366,7 +362,7 @@ TEST(InterpreterTests, IntPlusFloat)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "12");
+    EXPECT_EQ(ss.str(), "12\n");
 }
 
 TEST(InterpreterTests, IntPlusString)
@@ -389,7 +385,7 @@ TEST(InterpreterTests, IntPlusString)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "10");
+    EXPECT_EQ(ss.str(), "10\n");
 }
 
 TEST(InterpreterTests, IntPlusString2)
@@ -430,7 +426,7 @@ TEST(InterpreterTests, IntPlusBool)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "-4");
+    EXPECT_EQ(ss.str(), "-4\n");
 }
 
 TEST(InterpreterTests, IntOverflow)
@@ -471,7 +467,7 @@ TEST(InterpreterTests, FloatPlusInt)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "9.23");
+    EXPECT_EQ(ss.str(), "9.23\n");
 }
 
 TEST(InterpreterTests, FloatPlusFloat)
@@ -494,7 +490,7 @@ TEST(InterpreterTests, FloatPlusFloat)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "12.9");
+    EXPECT_EQ(ss.str(), "12.9\n");
 }
 
 TEST(InterpreterTests, FloatPlusString)
@@ -517,7 +513,7 @@ TEST(InterpreterTests, FloatPlusString)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "10.6");
+    EXPECT_EQ(ss.str(), "10.6\n");
 }
 
 TEST(InterpreterTests, FloatPlusString2)
@@ -558,7 +554,7 @@ TEST(InterpreterTests, FloatPlusBool)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "-1.23");
+    EXPECT_EQ(ss.str(), "-1.23\n");
 }
 
 TEST(InterpreterTests, StringPlusInt)
@@ -581,7 +577,7 @@ TEST(InterpreterTests, StringPlusInt)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "I have 2 cars");
+    EXPECT_EQ(ss.str(), "I have 2 cars\n");
 }
 
 TEST(InterpreterTests, StringPlusFloat)
@@ -604,7 +600,7 @@ TEST(InterpreterTests, StringPlusFloat)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "Value is equal: 8.500000");
+    EXPECT_EQ(ss.str(), "Value is equal: 8.500000\n");
 }
 
 TEST(InterpreterTests, StringPlusString)
@@ -627,7 +623,7 @@ TEST(InterpreterTests, StringPlusString)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "very good");
+    EXPECT_EQ(ss.str(), "very good\n");
 }
 
 TEST(InterpreterTests, StringPlusBool)
@@ -650,7 +646,7 @@ TEST(InterpreterTests, StringPlusBool)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "This statement is false");
+    EXPECT_EQ(ss.str(), "This statement is false\n");
 }
 
 TEST(InterpreterTests, BoolPlus)
@@ -691,7 +687,7 @@ TEST(InterpreterTests, IntMinusInt)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "-4");
+    EXPECT_EQ(ss.str(), "-4\n");
 }
 
 TEST(InterpreterTests, IntMinusFloat)
@@ -714,7 +710,7 @@ TEST(InterpreterTests, IntMinusFloat)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "-4");
+    EXPECT_EQ(ss.str(), "-4\n");
 }
 
 TEST(InterpreterTests, IntMinusString)
@@ -737,7 +733,7 @@ TEST(InterpreterTests, IntMinusString)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "-2");
+    EXPECT_EQ(ss.str(), "-2\n");
 }
 
 TEST(InterpreterTests, IntMinusString2)
@@ -778,7 +774,7 @@ TEST(InterpreterTests, IntMinusBool)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "-5");
+    EXPECT_EQ(ss.str(), "-5\n");
 }
 
 TEST(InterpreterTests, FloatMinusInt)
@@ -801,7 +797,7 @@ TEST(InterpreterTests, FloatMinusInt)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "-3.23");
+    EXPECT_EQ(ss.str(), "-3.23\n");
 }
 
 TEST(InterpreterTests, FloatMinusFloat)
@@ -824,7 +820,7 @@ TEST(InterpreterTests, FloatMinusFloat)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "2.2");
+    EXPECT_EQ(ss.str(), "2.2\n");
 }
 
 TEST(InterpreterTests, FloatMinusString)
@@ -847,7 +843,7 @@ TEST(InterpreterTests, FloatMinusString)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "4.4");
+    EXPECT_EQ(ss.str(), "4.4\n");
 }
 
 TEST(InterpreterTests, FloatMinusString2)
@@ -888,7 +884,7 @@ TEST(InterpreterTests, FloatMinusBool)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "-2.23");
+    EXPECT_EQ(ss.str(), "-2.23\n");
 }
 
 TEST(InterpreterTests, StringMinus)
@@ -947,7 +943,7 @@ TEST(InterpreterTests, IntMultply)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "140");
+    EXPECT_EQ(ss.str(), "140\n");
 }
 
 TEST(InterpreterTests, FloatMultply)
@@ -970,7 +966,7 @@ TEST(InterpreterTests, FloatMultply)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "3.75");
+    EXPECT_EQ(ss.str(), "3.75\n");
 }
 
 TEST(InterpreterTests, FloatOverflow)
@@ -1047,7 +1043,7 @@ TEST(InterpreterTests, IntDivide)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "7");
+    EXPECT_EQ(ss.str(), "7\n");
 }
 
 TEST(InterpreterTests, FloatDivide)
@@ -1070,7 +1066,7 @@ TEST(InterpreterTests, FloatDivide)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "1.5");
+    EXPECT_EQ(ss.str(), "1.5\n");
 }
 
 TEST(InterpreterTests, DivisionByZero)
@@ -1147,7 +1143,7 @@ TEST(InterpreterTests, IntEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, FloatEqual)
@@ -1170,7 +1166,7 @@ TEST(InterpreterTests, FloatEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, BoolEqual)
@@ -1193,7 +1189,7 @@ TEST(InterpreterTests, BoolEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, StringEqual)
@@ -1216,7 +1212,7 @@ TEST(InterpreterTests, StringEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, IntNotEqual)
@@ -1239,7 +1235,7 @@ TEST(InterpreterTests, IntNotEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, FloatNotEqual)
@@ -1262,7 +1258,7 @@ TEST(InterpreterTests, FloatNotEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, BoolNotEqual)
@@ -1285,7 +1281,7 @@ TEST(InterpreterTests, BoolNotEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, StringNotEqual)
@@ -1308,7 +1304,7 @@ TEST(InterpreterTests, StringNotEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, IntGreater)
@@ -1331,7 +1327,7 @@ TEST(InterpreterTests, IntGreater)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, FloatGreater)
@@ -1354,7 +1350,7 @@ TEST(InterpreterTests, FloatGreater)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, BoolGreater)
@@ -1413,7 +1409,7 @@ TEST(InterpreterTests, IntGreaterEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, FloatGreaterEqual)
@@ -1436,7 +1432,7 @@ TEST(InterpreterTests, FloatGreaterEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, BoolGreaterEqual)
@@ -1495,7 +1491,7 @@ TEST(InterpreterTests, IntLess)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, FloatLess)
@@ -1518,7 +1514,7 @@ TEST(InterpreterTests, FloatLess)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, BoolLess)
@@ -1577,7 +1573,7 @@ TEST(InterpreterTests, IntLessEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, FloatLessEqual)
@@ -1600,7 +1596,7 @@ TEST(InterpreterTests, FloatLessEqual)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, BoolLessEqual)
@@ -1659,7 +1655,7 @@ TEST(InterpreterTests, And)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, Or)
@@ -1682,7 +1678,7 @@ TEST(InterpreterTests, Or)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "true");
+    EXPECT_EQ(ss.str(), "true\n");
 }
 
 TEST(InterpreterTests, FunctionDeclaration)
@@ -1709,7 +1705,7 @@ TEST(InterpreterTests, FunctionDeclaration)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
     
-    EXPECT_EQ(ss.str(), "4");
+    EXPECT_EQ(ss.str(), "4\n");
 }
 
 TEST(InterpreterTests, FunctionDeclarationIncorrectParameterNumber)
@@ -1800,7 +1796,7 @@ TEST(InterpreterTests, FunctionDeclarationVoid)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
 
-    EXPECT_EQ(ss.str(), "3");
+    EXPECT_EQ(ss.str(), "3\n");
 }
 
 TEST(InterpreterTests, MainWrongType)
@@ -1833,7 +1829,6 @@ TEST(InterpreterTests, FunctionDeclarationModifyingArgument)
                             "mut int a = 2;\n"
                             "mut int b = fun(a);\n"
                             "print(a);\n"
-                            "print(\"\\n\");\n"
                             "print(b);\n"
                             "return 0;\n"
                         "]";
@@ -1849,7 +1844,7 @@ TEST(InterpreterTests, FunctionDeclarationModifyingArgument)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
 
-    EXPECT_EQ(ss.str(), "2\n3");
+    EXPECT_EQ(ss.str(), "2\n3\n");
 }
 
 TEST(InterpreterTests, FunctionWithRecursion)
@@ -1883,7 +1878,7 @@ TEST(InterpreterTests, FunctionWithRecursion)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
 
-    EXPECT_EQ(ss.str(), "120");
+    EXPECT_EQ(ss.str(), "120\n");
 }
 
 TEST(InterpreterTests, WhileLoop)
@@ -1895,7 +1890,6 @@ TEST(InterpreterTests, WhileLoop)
                             "while (b < a)\n"
                             "[\n"
                                 "print(b);\n"
-                                "print(\"\\n\");\n"
                                 "b = b + 1;\n"
                             "]\n"
                             "return 0;\n"
@@ -1948,11 +1942,11 @@ TEST(InterpreterTests, StructureCreation)
                         "int main()\n"
                         "[\n"
                             "new Person person1(\"Adam\", \"Nowak\", 35);\n"
-                            "print(\"Name: \" + person1.name + \"\\n\");\n"
-                            "print(\"Surname: \" + person1.surname + \"\\n\");\n"
-                            "print(\"Age: \" + person1.age + \"\\n\");"
-                            "person1.age = 36;"
-                            "print(\"New age: \" + person1.age + \"\\n\");"
+                            "print(\"Name: \" + person1.name);\n"
+                            "print(\"Surname: \" + person1.surname);\n"
+                            "print(\"Age: \" + person1.age);\n"
+                            "person1.age = 36;\n"
+                            "print(\"New age: \" + person1.age);\n"
                             "return 0;\n"
                         "]";
     std::stringstream source{input};
@@ -1981,7 +1975,7 @@ TEST(InterpreterTests, StructureChangeConstField)
                         "int main()\n"
                         "[\n"
                             "new Person person1(\"Adam\", \"Nowak\", 35);\n"
-                            "person1.name = \"Stefan\";"
+                            "person1.name = \"Stefan\";\n"
                             "return 0;\n"
                         "]";
     std::stringstream source{input};
@@ -2013,9 +2007,9 @@ TEST(InterpreterTests, NestedStructure)
                             "new Person person1(\"Adam\", \"Nowak\", 35);\n"
                             "new Lecture lecture(\"Matematyka\", 123, person1);\n"
                             "lecture.lecturer.age = 36;\n"
-                            "print(\"Lecture name: \" + lecture.name + \"\\n\");"
-                            "print(\"Room number: \" + lecture.roomNumber + \"\\n\");"
-                            "print(\"Lecturer: \" + lecture.lecturer.name + \" \" + lecture.lecturer.surname + \"\\n\");"
+                            "print(\"Lecture name: \" + lecture.name);\n"
+                            "print(\"Room number: \" + lecture.roomNumber);\n"
+                            "print(\"Lecturer: \" + lecture.lecturer.name + \" \" + lecture.lecturer.surname);\n"
                             "return 0;\n"
                         "]";
     std::stringstream source{input};
@@ -2118,7 +2112,7 @@ TEST(InterpreterTests, VariantWithMatch)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
 
-    EXPECT_EQ(ss.str(), "String value: hello");
+    EXPECT_EQ(ss.str(), "String value: hello\n");
 }
 
 TEST(InterpreterTests, VariantIncorrectType)
@@ -2193,7 +2187,7 @@ TEST(InterpreterTests, MatchDefault)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
 
-    EXPECT_EQ(ss.str(), "Different value");
+    EXPECT_EQ(ss.str(), "Different value\n");
 }
 
 TEST(InterpreterTests, MatchTwoDefaults)
@@ -2288,5 +2282,5 @@ TEST(InterpreterTests, MatchNestedVariant)
     program->accept(interpreter);
     std::cout.rdbuf(coutBuff);
 
-    EXPECT_EQ(ss.str(), "Completely different value");
+    EXPECT_EQ(ss.str(), "Completely different value\n");
 }
