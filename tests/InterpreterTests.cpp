@@ -127,6 +127,30 @@ TEST(InterpreterTests, PrintVariable)
     EXPECT_EQ(ss.str(), "4");
 }
 
+TEST(InterpreterTests, PrintVariable2)
+{
+    std::string input = "int main()\n"
+                        "[\n"
+                            "string a = \"hello\";\n"
+                            "string b = a;\n"
+                            "print(b);\n"
+                            "return 0;\n"
+                        "]";
+    std::stringstream source{input};
+    Lexer lexer(source);
+    Parser parser(lexer);
+    Interpreter interpreter;
+
+    std::unique_ptr<ProgramNode> program = parser.parseProgram();
+    std::ostringstream ss;
+    auto coutBuff = std::cout.rdbuf();
+    std::cout.rdbuf(ss.rdbuf());
+    program->accept(interpreter);
+    std::cout.rdbuf(coutBuff);
+    
+    EXPECT_EQ(ss.str(), "hello");
+}
+
 TEST(InterpreterTests, PrintIntDefault)
 {
     std::string input = "int main()\n"
@@ -241,6 +265,43 @@ TEST(InterpreterTests, Assign)
     std::cout.rdbuf(coutBuff);
     
     EXPECT_EQ(ss.str(), "9");
+}
+
+TEST(InterpreterTests, Assign2)
+{
+    std::string input = "int fun(int a)\n"
+                        "[\n"
+                            "a = a + 1;\n"
+                            "return a;\n"
+                        "]\n"
+                        "int main()\n"
+                        "[\n"
+                            "mut int a = 4;\n"
+                            "print(a);\n"
+                            "print(\"\\n\");\n"
+                            "int b = 5;\n"
+                            "print(b);\n"
+                            "print(\"\\n\");\n"
+                            "a = fun(b);\n"
+                            "print(a);\n"
+                            "print(\"\\n\");\n"
+                            "print(b);\n"
+                            "print(\"\\n\");\n"
+                            "return 0;\n"
+                        "]";
+    std::stringstream source{input};
+    Lexer lexer(source);
+    Parser parser(lexer);
+    Interpreter interpreter;
+
+    std::unique_ptr<ProgramNode> program = parser.parseProgram();
+    std::ostringstream ss;
+    auto coutBuff = std::cout.rdbuf();
+    std::cout.rdbuf(ss.rdbuf());
+    program->accept(interpreter);
+    std::cout.rdbuf(coutBuff);
+    
+    EXPECT_EQ(ss.str(), "4\n5\n6\n5\n");
 }
 
 TEST(InterpreterTests, AssignToConst)
@@ -1972,7 +2033,6 @@ TEST(InterpreterTests, NestedStructure)
     EXPECT_EQ(ss.str(), "Lecture name: Matematyka\nRoom number: 123\nLecturer: Adam Nowak\n");
 }
 
-
 TEST(InterpreterTests, StructureChangeIncorrectParameterNumber)
 {
     std::string input = "struct Person\n"
@@ -2059,4 +2119,174 @@ TEST(InterpreterTests, VariantWithMatch)
     std::cout.rdbuf(coutBuff);
 
     EXPECT_EQ(ss.str(), "String value: hello");
+}
+
+TEST(InterpreterTests, VariantIncorrectType)
+{
+    std::string input = "variant[int, string] a;\n"
+                        "void printVariant(variant[int, string] v)\n"
+                        "[\n"
+                            "match v\n"
+                            "[\n"
+                                "int i\n"
+                                "[\n"
+                                    "print(\"Int value: \" + i);\n"
+                                "]\n"
+                                "string i\n"
+                                "[\n"
+                                    "print(\"String value: \" + i);\n"
+                                "]\n"
+                                "default\n"
+                                "[\n"
+                                    "print(\"Different value\");\n"
+                                "]\n"
+                            "]\n"
+                        "]\n"
+                        "int main()\n"
+                        "[\n"
+                            "a = true;\n"
+                            "printVariant(a);\n"
+                            "return 0;\n"
+                        "]";
+    std::stringstream source{input};
+    Lexer lexer(source);
+    Parser parser(lexer);
+    Interpreter interpreter;
+
+    std::unique_ptr<ProgramNode> program = parser.parseProgram();
+
+    EXPECT_THROW(program->accept(interpreter), InterpreterException);
+}
+
+TEST(InterpreterTests, MatchDefault)
+{
+    std::string input = "variant[int, string] a;\n"
+                        "void printVariant(variant[int, string] v)\n"
+                        "[\n"
+                            "match v\n"
+                            "[\n"
+                                "int i\n"
+                                "[\n"
+                                    "print(\"Int value: \" + i);\n"
+                                "]\n"
+                                "default\n"
+                                "[\n"
+                                    "print(\"Different value\");\n"
+                                "]\n"
+                            "]\n"
+                        "]\n"
+                        "int main()\n"
+                        "[\n"
+                            "a = \"hello\";\n"
+                            "printVariant(a);\n"
+                            "return 0;\n"
+                        "]";
+    std::stringstream source{input};
+    Lexer lexer(source);
+    Parser parser(lexer);
+    Interpreter interpreter;
+
+    std::unique_ptr<ProgramNode> program = parser.parseProgram();
+    std::ostringstream ss;
+    auto coutBuff = std::cout.rdbuf();
+    std::cout.rdbuf(ss.rdbuf());
+    program->accept(interpreter);
+    std::cout.rdbuf(coutBuff);
+
+    EXPECT_EQ(ss.str(), "Different value");
+}
+
+TEST(InterpreterTests, MatchTwoDefaults)
+{
+    std::string input = "variant[int, string] a;\n"
+                        "void printVariant(variant[int, string] v)\n"
+                        "[\n"
+                            "match v\n"
+                            "[\n"
+                                "int i\n"
+                                "[\n"
+                                    "print(\"Int value: \" + i);\n"
+                                "]\n"
+                                "default\n"
+                                "[\n"
+                                    "print(\"Different value\");\n"
+                                "]\n"
+                                "default\n"
+                                "[\n"
+                                    "print(\"Completely different value\");\n"
+                                "]\n"
+                            "]\n"
+                        "]\n"
+                        "int main()\n"
+                        "[\n"
+                            "a = \"hello\";\n"
+                            "printVariant(a);\n"
+                            "return 0;\n"
+                        "]";
+    std::stringstream source{input};
+    Lexer lexer(source);
+    Parser parser(lexer);
+    Interpreter interpreter;
+
+    std::unique_ptr<ProgramNode> program = parser.parseProgram();
+
+    EXPECT_THROW(program->accept(interpreter), InterpreterException);
+}
+
+TEST(InterpreterTests, MatchNestedVariant)
+{
+    std::string input = "variant[int, string, variant[float, bool]] a;\n"
+                        "void printVariant(variant[int, string, variant[float, bool]] v)\n"
+                        "[\n"
+                            "match v\n"
+                            "[\n"
+                                "int i\n"
+                                "[\n"
+                                    "print(\"Int value: \" + i);\n"
+                                "]\n"
+                                "string i\n"
+                                "[\n"
+                                    "print(\"String value: \" + i);\n"
+                                "]\n"
+                                "variant[float, bool] i\n"
+                                "[\n"
+                                    "match i\n"
+                                    "[\n"
+                                        "float f\n"
+                                        "[\n"
+                                            "print(\"Float value: \" + f);\n"
+                                        "]\n"
+                                        "default\n"
+                                        "[\n"
+                                            "print(\"Completely different value\");\n"
+                                        "]\n"
+                                    "]\n"
+                                "]\n"
+                                "default\n"
+                                "[\n"
+                                    "print(\"Different value\");\n"
+                                "]\n"
+                            "]\n"
+                        "]\n"
+                        "int main()\n"
+                        "[\n"
+                            "variant[float, bool] b;\n"
+                            "b = true;\n"
+                            "a = b;\n"
+                            "printVariant(a);\n"
+                            "return 0;\n"
+                        "]";
+    std::stringstream source{input};
+    Lexer lexer(source);
+    Parser parser(lexer);
+    Interpreter interpreter;
+
+    std::unique_ptr<ProgramNode> program = parser.parseProgram();
+    std::ostringstream ss;
+    auto coutBuff = std::cout.rdbuf();
+    std::cout.rdbuf(ss.rdbuf());
+    program->accept(interpreter);
+    std::cout.rdbuf(coutBuff);
+
+    EXPECT_EQ(ss.str(), "Completely different value");
 }

@@ -93,7 +93,8 @@ struct Scope
     std::unordered_map<std::string, Variable> variables;
     std::unordered_map<std::string, Structure> structs;
     std::unordered_map<std::string, StructureInstance> structInstances;
-    std::unordered_map<std::string, Variant> variants;
+    std::unordered_map<std::string, std::shared_ptr<Variant>> variants;
+    bool typeMatched = false;
 };
 
 struct FunctionCallContext
@@ -116,7 +117,6 @@ private:
     std::vector<Field> fieldBuffer;
     std::stack<Value> valueStack;
     std::variant<std::monostate, Variable*, Variant*, std::pair<StructureInstance*, std::string>> toAssign;
-    bool typeMatched = false;
 
     Scope& currentScope();
     void enterScope();
@@ -128,7 +128,7 @@ private:
     Function& getFunction(const std::string& identifier);
     Variable& getVariable(const std::string& identifier);
     Structure& getStructure(const std::string& identifier);
-    Variant& getVariant(const std::string& identifier);
+    std::shared_ptr<Variant>& getVariant(const std::string& identifier);
     StructureInstance& getStructureInstance(const std::string& identifier);
     std::string buildVariantType(const Variant& variant);
     std::string determineValueType(const Value& value);

@@ -242,7 +242,7 @@ Structure& Interpreter::getStructure(const std::string& identifier)
     throw InterpreterException("struct not found: " + identifier);
 }
 
-Variant& Interpreter::getVariant(const std::string& identifier)
+std::shared_ptr<Variant>& Interpreter::getVariant(const std::string& identifier)
 {
     for (auto it = callStack.top().scopes.rbegin(); it != callStack.top().scopes.rend(); ++it)
     {
@@ -390,7 +390,7 @@ void Interpreter::visit(const VariantDeclarationNode& node)
     std::vector<Value> values;
     values.resize(parameterTypes.size());
 
-    currentScope().variants[node.getIdentifier()] = Variant{parameterTypes, activeIndex, values};
+    currentScope().variants[node.getIdentifier()] = std::make_unique<Variant>(parameterTypes, activeIndex, values);
     parameterTypes.clear();
 }
 
@@ -421,6 +421,7 @@ void Interpreter::visit(const BlockNode& node)
 void Interpreter::visit(const AssignmentNode& node)
 {
     node.getFieldOrFunCall()->accept(*this);
+    auto target = toAssign;
 
     if (auto expression = node.getExpression())
     {
@@ -430,18 +431,18 @@ void Interpreter::visit(const AssignmentNode& node)
         auto newValue = valueStack.top();
         valueStack.pop();
 
-        if (std::holds_alternative<Variable*>(toAssign))
+        if (std::holds_alternative<Variable*>(target))
         {
-            Variable* variable = std::get<Variable*>(toAssign);
+            Variable* variable = std::get<Variable*>(target);
             if (!variable->isMutable)
             {
                 throw InterpreterException("cannot modify a const value");
             }
             variable->value = castValueType(newValue, variable->type);
         }
-        else if (std::holds_alternative<std::pair<StructureInstance*, std::string>>(toAssign))
+        else if (std::holds_alternative<std::pair<StructureInstance*, std::string>>(target))
         {
-            auto [structInstance, fieldName] = std::get<std::pair<StructureInstance*, std::string>>(toAssign);
+            auto [structInstance, fieldName] = std::get<std::pair<StructureInstance*, std::string>>(target);
 
             Structure& structure = getStructure(structInstance->type);
 
@@ -470,11 +471,12 @@ void Interpreter::visit(const AssignmentNode& node)
                 structInstance->values[fieldName] = newValue;
             }
         }
-        else if (std::holds_alternative<Variant*>(toAssign))
+        else if (std::holds_alternative<Variant*>(target))
         {
-            Variant* variant = std::get<Variant*>(toAssign);
+            Variant* variant = std::get<Variant*>(target);
             
             std::string newType = determineValueType(newValue);
+
             auto it = std::find(variant->allowedTypes.begin(), variant->allowedTypes.end(), newType);
             if (it != variant->allowedTypes.end())
             {
@@ -578,7 +580,7 @@ void Interpreter::visit(const MatchStatementNode& node)
         throw InterpreterException("variant does not hold any value");
     }
 
-    typeMatched = false;
+    currentScope().typeMatched = false;
     const MatchCaseNode* defaultCase = nullptr;
 
     for (const auto& matchCase : node.getCases())
@@ -597,13 +599,13 @@ void Interpreter::visit(const MatchStatementNode& node)
 
         matchCase->accept(*this);
 
-        if (typeMatched)
+        if (currentScope().typeMatched)
         {
             break;
         }
     }
 
-    if (!typeMatched && defaultCase)
+    if (!currentScope().typeMatched && defaultCase)
     {
         defaultCase->accept(*this);
     }
@@ -1168,12 +1170,7 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
 
             if (std::holds_alternative<std::shared_ptr<Variant>>(value))
             {
-                std::vector<std::string> allowedTypes = std::get<std::shared_ptr<Variant>>(value)->allowedTypes;
-                size_t activeIndex = std::get<std::shared_ptr<Variant>>(value)->activeIndex;
-                std::vector<Value> values;
-                values.resize(allowedTypes.size());
-                values[activeIndex] = value;
-                currentScope().variants[param.second] = Variant{allowedTypes, activeIndex, values};
+                currentScope().variants[param.second] = std::get<std::shared_ptr<Variant>>(value);
             }
             else
             {
@@ -1191,12 +1188,9 @@ void Interpreter::visit(const FieldOrFunCallNode& node)
     {
         try
         {
-            Variant& variant = getVariant(identifier);
-            std::vector<std::string> allowedTypes = variant.allowedTypes;
-            size_t activeIndex = variant.activeIndex;
-            std::vector<Value> values = variant.values;
-            valueStack.push(std::make_shared<Variant>(allowedTypes, activeIndex, values));
-            toAssign = &variant;
+            std::shared_ptr<Variant>& variant = getVariant(identifier);
+            valueStack.push(variant);
+            toAssign = variant.get();
         }
         catch(const InterpreterException& e)
         {
@@ -1291,7 +1285,7 @@ void Interpreter::visit(const StructFieldNode& node)
         variantDeclaration->accept(*this);
 
         identifier = variantDeclaration->getIdentifier();
-        type = buildVariantType(currentScope().variants[identifier]);
+        type = buildVariantType(*currentScope().variants[identifier]);
         
         currentScope().variants.erase(identifier);
     }
@@ -1331,7 +1325,7 @@ void Interpreter::visit(const VariantNode& node)
 
             variantType += "]";
             parameterTypes.resize(initialSize);
-            parameterTypes.push_back(variantType); 
+            parameterTypes.push_back(variantType);
         }
     }
 }
@@ -1357,10 +1351,21 @@ void Interpreter::visit(const MatchCaseNode& node)
     }
     else if (std::holds_alternative<std::unique_ptr<VariantNode>>(node.getType()))
     {
+        type = "variant[";
+        size_t initialSize = parameterTypes.size();
         auto variant = std::get<std::unique_ptr<VariantNode>>(node.getType()).get();
         variant->accept(*this);
-        type = parameterTypes.back();
-        parameterTypes.pop_back();
+        for (size_t j = initialSize; j < parameterTypes.size(); ++j)
+        {
+            if (j > initialSize)
+            {
+                type += ", ";
+            }
+            type += parameterTypes[j];
+        }
+
+        type += "]";
+        parameterTypes.resize(initialSize);
     }
 
     std::string identifier = node.getIdentifier();
@@ -1368,7 +1373,7 @@ void Interpreter::visit(const MatchCaseNode& node)
 
     if (type == std::get<std::shared_ptr<Variant>>(value)->allowedTypes[activeIndex])
     {
-        typeMatched = true;
+        currentScope().typeMatched = true;
         enterScope();
         auto storedValue = std::get<std::shared_ptr<Variant>>(value)->values[activeIndex];
         if (std::holds_alternative<int>(storedValue) ||
@@ -1380,13 +1385,8 @@ void Interpreter::visit(const MatchCaseNode& node)
         }
         else if (std::holds_alternative<std::shared_ptr<Variant>>(storedValue))
         {
-            auto& variant = std::get<std::shared_ptr<Variant>>(value);
-            std::vector<std::string> allowedTypes = variant->allowedTypes;
-            size_t activeIndex = variant->activeIndex;
-            std::vector<Value> values;
-            values.resize(allowedTypes.size());
-            values[activeIndex] = value;
-            currentScope().variants[identifier] = Variant(allowedTypes, activeIndex, values);
+            auto& nestedVariant = std::get<std::shared_ptr<Variant>>(storedValue);
+            currentScope().variants[identifier] = nestedVariant;
         }
         node.getBlock()->accept(*this);
         exitScope();
