@@ -1,0 +1,24 @@
+struct Person
+[
+    string name;
+    string surname;
+    mut int age;
+]
+
+struct Lecture
+[
+    string name;
+    int roomNumber;
+    Person lecturer;
+]
+
+int main()
+[
+    new Person person1("Adam", "Nowak", 35);
+    new Lecture lecture("Matematyka", 123, person1);
+    lecture.lecturer.age = 36;
+    print("Lecture name: " + lecture.name);
+    print("Room number: " + lecture.roomNumber);
+    print("Lecturer: " + lecture.lecturer.name + " " + lecture.lecturer.surname);
+    return 0;
+]

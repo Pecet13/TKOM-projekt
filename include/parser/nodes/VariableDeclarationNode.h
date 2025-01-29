@@ -30,6 +30,31 @@ public:
         }
         return result;
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    bool getMutable() const
+    {
+        return isMutable;
+    }
+
+    std::string getType() const
+    {
+        return type;
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
+
+    const ExpressionNode* getExpression() const
+    {
+        return expression.get();
+    }
 };
 
 #endif

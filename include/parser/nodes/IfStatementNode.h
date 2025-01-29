@@ -30,6 +30,26 @@ public:
         }
         return result;
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    const ExpressionNode* getCondition() const
+    {
+        return condition.get();
+    }
+
+    const BlockNode* getBlock() const
+    {
+        return block.get();
+    }
+
+    const BlockNode* getElseBlock() const
+    {
+        return elseBlock.get();
+    }
 };
 
 #endif

@@ -1,0 +1,41 @@
+void printVariant(variant[int, string, variant[float, bool]] v)
+[
+    match v
+    [
+        int i
+        [
+            print("Int value: " + i);
+        ]
+        string i
+        [
+            print("String value: " + i);
+        ]
+        variant[float, bool] i
+        [
+            match i
+            [
+                float f
+                [
+                    print("Float value: " + f);
+                ]
+                default
+                [
+                    print("Completely different value");
+                ]
+            ]
+        ]
+        default
+        [
+            print("Different value");
+        ]
+    ]
+]
+int main()
+[
+    variant[int, string, variant[float, bool]] a;
+    variant[float, bool] b;
+    b = 2.5;
+    a = b;
+    printVariant(a);
+    return 0;
+]

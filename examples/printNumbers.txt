@@ -1,0 +1,11 @@
+int main()
+[
+    int a = 10;
+    mut int b = 1;
+    while (b < a)
+    [
+        print(b);
+        b = b + 1;
+    ]
+    return 0;
+]

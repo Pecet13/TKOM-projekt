@@ -40,6 +40,16 @@ public:
         }
         return result;
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    const std::vector<std::variant<std::string, std::unique_ptr<VariantNode>>>& getTypes() const
+    {
+        return types;
+    }
 };
 
 #endif

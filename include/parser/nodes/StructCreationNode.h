@@ -23,6 +23,26 @@ public:
         return indent + "StructCreation(type: " + type + ", identifier: " + identifier + ")\n" +
                 arguments->toString(indentLevel + 1);
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    std::string getType() const
+    {
+        return type;
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
+
+    const ArgumentListNode* getArguments() const
+    {
+        return arguments.get();
+    }
 };
 
 #endif

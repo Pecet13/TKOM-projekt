@@ -24,6 +24,16 @@ public:
         }
         return result;
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    const ExpressionNode* getExpression() const
+    {
+        return expression.get();
+    }
 };
 
 #endif

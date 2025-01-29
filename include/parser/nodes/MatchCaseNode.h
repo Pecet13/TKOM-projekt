@@ -46,6 +46,26 @@ public:
         result += block->toString(indentLevel + 1);
         return result;
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    const std::variant<std::string, std::unique_ptr<VariantNode>>& getType() const
+    {
+        return type;
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
+
+    const BlockNode* getBlock() const
+    {
+        return block.get();
+    }
 };
 
 #endif

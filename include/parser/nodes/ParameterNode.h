@@ -24,14 +24,28 @@ public:
         std::string result = indent + "Parameter(type: ";
         if (std::holds_alternative<std::string>(type))
         {
-            result += std::get<std::string>(type);
+            result += std::get<std::string>(type) + ", identifier: " + identifier + ")\n";
         }
         if (std::holds_alternative<std::unique_ptr<VariantNode>>(type))
         {
-            result += std::get<std::unique_ptr<VariantNode>>(type)->toString();
+            result += "variant, identifier: " + identifier + ")\n" + std::get<std::unique_ptr<VariantNode>>(type)->toString(indentLevel + 1);
         }
-        result += ", identifier: " + identifier + ")\n";
         return result;
+    }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    const std::variant<std::string, std::unique_ptr<VariantNode>>& getType() const
+    {
+        return type;
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
     }
 };
 

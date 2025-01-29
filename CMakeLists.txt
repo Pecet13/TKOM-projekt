@@ -21,6 +21,7 @@ target_include_directories(Lexer PUBLIC include)
 
 add_library(Parser
     include/parser/Parser.h
+    include/parser/ParserException.h
     include/parser/nodes/Node.h
     src/parser/Parser.cpp
 )
@@ -29,6 +30,16 @@ target_sources(Parser PUBLIC ${NODE_HEADERS})
 target_include_directories(Parser PUBLIC include)
 
 target_link_libraries(Parser PUBLIC Lexer)
+
+add_library(Interpreter
+    include/interpreter/NodeVisitor.h
+    include/interpreter/Interpreter.h
+    include/interpreter/InterpreterException.h
+    src/interpreter/Interpreter.cpp
+)
+target_include_directories(Interpreter PUBLIC include)
+
+target_link_libraries(Interpreter PUBLIC Parser)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -49,3 +60,11 @@ add_executable(ParserTests tests/ParserTests.cpp)
 target_link_libraries(ParserTests gtest_main Parser)
 gtest_discover_tests(ParserTests)
 target_link_libraries(ParserTests gtest_main Parser Lexer)
+
+add_executable(InterpreterTests tests/InterpreterTests.cpp)
+target_link_libraries(InterpreterTests gtest_main Interpreter)
+gtest_discover_tests(InterpreterTests)
+target_link_libraries(InterpreterTests gtest_main Interpreter Parser Lexer)
+
+add_executable(main main.cpp)
+target_link_libraries(main Interpreter Parser Lexer)

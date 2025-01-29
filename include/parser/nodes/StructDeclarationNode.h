@@ -23,6 +23,21 @@ public:
         std::string indent(indentLevel, '-');
         return indent + "StructDeclaration(identifier: " + identifier + ")\n" + fields->toString(indentLevel + 1);
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
+
+    const StructFieldListNode* getFields() const
+    {
+        return fields.get();
+    }
 };
 
 #endif

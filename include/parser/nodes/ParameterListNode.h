@@ -26,6 +26,16 @@ public:
         }
         return result;
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    const std::vector<std::unique_ptr<ParameterNode>>& getParameters() const
+    {
+        return parameters;
+    }
 };
 
 #endif

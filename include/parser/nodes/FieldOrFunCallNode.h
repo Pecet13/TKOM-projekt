@@ -45,6 +45,21 @@ public:
         }
         return result;
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
+
+    const std::variant<std::monostate, std::vector<std::string>, std::unique_ptr<ArgumentListNode>>& getAdditionalContent() const
+    {
+        return additionalContent;
+    }
 };
 
 #endif

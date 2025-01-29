@@ -23,6 +23,21 @@ public:
         std::string indent(indentLevel, '-');
         return indent + "VariantDeclaration(identifier: " + identifier + ")\n"+ variant->toString(indentLevel + 1);
     }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    const VariantNode* getVariant() const
+    {
+        return variant.get();
+    }
+
+    std::string getIdentifier() const
+    {
+        return identifier;
+    }
 };
 
 #endif

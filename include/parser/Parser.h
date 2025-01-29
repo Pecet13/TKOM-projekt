@@ -9,12 +9,15 @@
 #include "nodes/ArgumentListNode.h"
 #include "nodes/AssignmentNode.h"
 #include "nodes/BlockNode.h"
+#include "nodes/BoolLiteralNode.h"
 #include "nodes/ComparisonNode.h"
 #include "nodes/DeclarationNode.h"
 #include "nodes/ExpressionNode.h"
 #include "nodes/FieldOrFunCallNode.h"
+#include "nodes/FloatLiteralNode.h"
 #include "nodes/FunctionDeclarationNode.h"
 #include "nodes/IfStatementNode.h"
+#include "nodes/IntLiteralNode.h"
 #include "nodes/LiteralNode.h"
 #include "nodes/MatchCaseNode.h"
 #include "nodes/MatchStatementNode.h"
@@ -24,6 +27,7 @@
 #include "nodes/ProgramNode.h"
 #include "nodes/ReturnStatementNode.h"
 #include "nodes/StatementNode.h"
+#include "nodes/StringLiteralNode.h"
 #include "nodes/StructCreationNode.h"
 #include "nodes/StructDeclarationNode.h"
 #include "nodes/StructFieldListNode.h"
@@ -40,11 +44,9 @@ class Parser
 private:
     Lexer &lexer;
     Token currentToken;
-    static const std::unordered_map<TokenType, std::string> tokenTypeToStringMap;
 
     void advance();
     void must_be(TokenType tokenType, const std::string& message);
-    static std::string tokenTypeToString(TokenType type);
 
     std::unique_ptr<DeclarationNode> parseDeclaration();
     std::unique_ptr<DeclarationNode> parseFunctionOrVariableDeclaration();
@@ -74,6 +76,7 @@ private:
     std::unique_ptr<VariantNode> parseVariant();
     std::unique_ptr<MatchCaseNode> parseMatchCase();
     std::unique_ptr<LiteralNode> parseLiteral();
+    bool parseType();
 
 public:
     Parser(Lexer &lexer);

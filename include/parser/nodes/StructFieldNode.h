@@ -30,9 +30,24 @@ public:
         }
         else if (std::holds_alternative<std::unique_ptr<VariantDeclarationNode>>(content))
         {
-            return indent + "StructField" + std::get<std::unique_ptr<VariantDeclarationNode>>(content)->toString();
+            return indent + "StructField\n" + std::get<std::unique_ptr<VariantDeclarationNode>>(content)->toString(indentLevel + 1);
         }
         return indent + "StructField\n";
+    }
+
+    void accept(NodeVisitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    bool getMutable() const
+    {
+        return isMutable;
+    }
+
+    const std::variant<std::pair<std::string, std::string>, std::unique_ptr<VariantDeclarationNode>>& getContent() const
+    {
+        return content;
     }
 };
 
