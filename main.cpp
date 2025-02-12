@@ -23,7 +23,16 @@ int main(int argc, char* argv[])
     Parser parser(lexer);
     Interpreter interpreter;
     std::unique_ptr<ProgramNode> program = parser.parseProgram();
-    program->accept(interpreter);
+    try
+    {
+        program->accept(interpreter);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        sourceFile.close();
+        return 1;
+    }
 
     sourceFile.close();
 

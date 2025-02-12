@@ -414,7 +414,6 @@ void Interpreter::visit(const BlockNode& node)
         {
             break;
         }
-        currentScope();
     }
 }
 
@@ -508,7 +507,7 @@ void Interpreter::visit(const IfStatementNode& node)
     {
         node.getBlock()->accept(*this);
     }
-    else
+    else if (node.getElseBlock())
     {
         node.getElseBlock()->accept(*this);
     }
